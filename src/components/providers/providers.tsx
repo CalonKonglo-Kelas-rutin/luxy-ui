@@ -4,7 +4,7 @@ import { wagmiAdapter, projectId } from '@/config'
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query'
 import { createAppKit } from '@reown/appkit/react'
 import { mainnet, liskSepolia } from '@reown/appkit/networks'
-import React, { type ReactNode } from 'react'
+import { type ReactNode } from 'react'
 import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
 
 // Set up queryClient with optimized defaults
@@ -25,32 +25,29 @@ if (!projectId) {
 const metadata = {
   name: 'Chain Credit',
   description: 'Chain Credit DApp',
-  url: typeof window !== 'undefined' ? window.location.origin : 'https://chaincredit.app',
+  url: process.env.NEXT_PUBLIC_APP_URL || 'http://localhost:3000',
   icons: ['https://avatars.githubusercontent.com/u/179229932']
 }
 
-// Create the modal only once
-let appKitInitialized = false
-if (typeof window !== 'undefined' && !appKitInitialized) {
-  createAppKit({
-    adapters: [wagmiAdapter],
-    projectId,
-    networks: [mainnet, liskSepolia],
-    defaultNetwork: liskSepolia,
-    metadata: metadata,
-    features: {
-      analytics: false, // Disable to improve performance
-    }
-  })
-  appKitInitialized = true
-}
+createAppKit({
+  adapters: [wagmiAdapter],
+  projectId,
+  networks: [mainnet, liskSepolia],
+  defaultNetwork: liskSepolia,
+  metadata: metadata,
+  features: {
+    analytics: false,
+  }
+})
 
 export function Providers({ children, cookies }: { children: ReactNode; cookies: string | null }) {
   const initialState = cookieToInitialState(wagmiAdapter.wagmiConfig as Config, cookies)
 
   return (
     <WagmiProvider config={wagmiAdapter.wagmiConfig as Config} initialState={initialState}>
-      <QueryClientProvider client={queryClient}>{children}</QueryClientProvider>
+      <QueryClientProvider client={queryClient}>
+        {children}
+      </QueryClientProvider>
     </WagmiProvider>
   )
 }
