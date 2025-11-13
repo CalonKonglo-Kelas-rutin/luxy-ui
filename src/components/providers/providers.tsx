@@ -6,6 +6,7 @@ import { createAppKit } from '@reown/appkit/react'
 import { mainnet, liskSepolia } from '@reown/appkit/networks'
 import { type ReactNode } from 'react'
 import { cookieToInitialState, WagmiProvider, type Config } from 'wagmi'
+import { Toaster } from '@/components/ui/sonner'
 
 // Set up queryClient with optimized defaults
 const queryClient = new QueryClient({
@@ -47,6 +48,7 @@ export function Providers({ children, cookies }: { children: ReactNode; cookies:
     <WagmiProvider config={wagmiAdapter.wagmiConfig as Config} initialState={initialState}>
       <QueryClientProvider client={queryClient}>
         {children}
+        <Toaster />
       </QueryClientProvider>
     </WagmiProvider>
   )

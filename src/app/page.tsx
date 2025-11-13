@@ -1,19 +1,29 @@
 import { MainLayout } from "@/components/layouts/main-layout";
+import { DashboardStats } from "@/components/features/dashboard-stats";
+import { DepositCollateralForm } from "@/components/features/deposit-collateral-form";
+import { BorrowUsdtForm } from "@/components/features/borrow-usdt-form";
+import { LoanDetails } from "@/components/features/loan-details";
 
 export default function Page() {
   return (
     <MainLayout
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Overview" },
       ]}
     >
-      <div className="grid auto-rows-min gap-4 md:grid-cols-3">
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
-        <div className="bg-muted/50 aspect-video rounded-xl" />
+      <div className="space-y-8 my-6">
+        {/* Stats Overview */}
+        <DashboardStats />
+
+        {/* Forms Grid */}
+        <div className="grid gap-6 md:grid-cols-2">
+          <DepositCollateralForm />
+          <BorrowUsdtForm />
+        </div>
+
+        {/* Loan Details */}
+        <LoanDetails />
       </div>
-      <div className="bg-muted/50 min-h-screen flex-1 rounded-xl md:min-h-min" />
     </MainLayout>
   );
 }
