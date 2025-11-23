@@ -11,6 +11,7 @@ import {
 import { Separator } from "@/components/ui/separator";
 import { SidebarTrigger } from "@/components/ui/sidebar";
 import { NavUser } from "./nav/nav-user";
+import { ModeToggle } from "../ui/mode-toggle";
 
 interface AppHeaderProps {
   breadcrumbs?: {
@@ -52,6 +53,7 @@ export function AppHeader({ breadcrumbs }: AppHeaderProps) {
         )}
       </div>
       <div className="flex items-center gap-2 px-4">
+        <ModeToggle />
         <NavUser />
       </div>
     </header>
