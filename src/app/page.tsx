@@ -12,7 +12,7 @@ import {
   Activity,
   Users,
   Watch,
-  ArrowRight
+  ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
 
@@ -99,17 +99,13 @@ const recentActivity = [
 
 export default function Page() {
   return (
-    <MainLayout
-      breadcrumbs={[
-        { label: "Dashboard", href: "/" },
-      ]}
-    >
+    <MainLayout breadcrumbs={[{ label: "Dashboard", href: "/" }]}>
       <div className="space-y-6 my-6">
         {/* Hero Section */}
         <div className="relative overflow-hidden rounded-2xl border bg-card">
           <div className="absolute inset-0 bg-linear-to-br from-accent/10 via-primary/5 to-transparent" />
           <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
-          
+
           <div className="relative p-8">
             <div className="max-w-2xl">
               <h1 className="text-4xl font-bold mb-3 bg-linear-to-r from-foreground to-foreground/70 bg-clip-text">
@@ -119,7 +115,11 @@ export default function Page() {
                 Own fractions of luxury watches and earn rental yields
               </p>
               <div className="flex gap-3">
-                <Button size="lg" className="bg-accent hover:bg-accent/90 gap-2" asChild>
+                <Button
+                  size="lg"
+                  className="bg-accent hover:bg-accent/90 gap-2"
+                  asChild
+                >
                   <Link href="/launchpad">
                     <Watch className="h-5 w-5" />
                     Explore Offerings
@@ -144,15 +144,15 @@ export default function Page() {
               <div className="p-2 rounded-lg bg-accent/10">
                 <Wallet className="h-5 w-5 text-accent" />
               </div>
-              <Badge variant="secondary" className="text-xs">Portfolio</Badge>
+              <Badge variant="secondary" className="text-xs">
+                Portfolio
+              </Badge>
             </div>
             <p className="text-sm text-muted-foreground mb-1">Total Value</p>
             <p className="text-3xl font-bold text-accent">
               ${stats.totalPortfolioValue.toLocaleString()}
             </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              +7.1% all-time
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">+7.1% all-time</p>
           </GlassCard>
 
           <GlassCard hover className="p-6">
@@ -160,7 +160,9 @@ export default function Page() {
               <div className="p-2 rounded-lg bg-primary/10">
                 <Package className="h-5 w-5 text-primary" />
               </div>
-              <Badge variant="secondary" className="text-xs">Active</Badge>
+              <Badge variant="secondary" className="text-xs">
+                Active
+              </Badge>
             </div>
             <p className="text-sm text-muted-foreground mb-1">My Investments</p>
             <p className="text-3xl font-bold">{stats.totalInvestments}</p>
@@ -174,15 +176,17 @@ export default function Page() {
               <div className="p-2 rounded-lg bg-success/10">
                 <TrendingUp className="h-5 w-5 text-success" />
               </div>
-              <Badge variant="secondary" className="text-xs">Claimable</Badge>
+              <Badge variant="secondary" className="text-xs">
+                Claimable
+              </Badge>
             </div>
-            <p className="text-sm text-muted-foreground mb-1">Available Yield</p>
+            <p className="text-sm text-muted-foreground mb-1">
+              Available Yield
+            </p>
             <p className="text-3xl font-bold text-success">
               ${stats.claimableYield.toLocaleString()}
             </p>
-            <p className="text-xs text-muted-foreground mt-2">
-              Ready to claim
-            </p>
+            <p className="text-xs text-muted-foreground mt-2">Ready to claim</p>
           </GlassCard>
 
           <GlassCard hover className="p-6">
@@ -190,10 +194,16 @@ export default function Page() {
               <div className="p-2 rounded-lg bg-info/10">
                 <Sparkles className="h-5 w-5 text-info" />
               </div>
-              <Badge variant="secondary" className="text-xs">Lifetime</Badge>
+              <Badge variant="secondary" className="text-xs">
+                Lifetime
+              </Badge>
             </div>
-            <p className="text-sm text-muted-foreground mb-1">Total Yield Earned</p>
-            <p className="text-3xl font-bold">${stats.totalYieldEarned.toLocaleString()}</p>
+            <p className="text-sm text-muted-foreground mb-1">
+              Total Yield Earned
+            </p>
+            <p className="text-3xl font-bold">
+              ${stats.totalYieldEarned.toLocaleString()}
+            </p>
             <p className="text-xs text-muted-foreground mt-2">
               From rental income
             </p>
@@ -233,8 +243,12 @@ export default function Page() {
                       <div className="flex-1">
                         <div className="flex items-start justify-between mb-2">
                           <div>
-                            <h3 className="font-semibold">{ownership.assetName}</h3>
-                            <p className="text-sm text-muted-foreground">{ownership.brand}</p>
+                            <h3 className="font-semibold">
+                              {ownership.assetName}
+                            </h3>
+                            <p className="text-sm text-muted-foreground">
+                              {ownership.brand}
+                            </p>
                           </div>
                           <Badge variant="outline" className="gap-1">
                             <Users className="h-3 w-3" />
@@ -244,23 +258,40 @@ export default function Page() {
 
                         <div className="grid grid-cols-4 gap-3 mb-3 text-xs">
                           <div>
-                            <p className="text-muted-foreground mb-0.5">Units Owned</p>
-                            <p className="font-semibold">{ownership.unitsOwned}/{ownership.totalUnits}</p>
+                            <p className="text-muted-foreground mb-0.5">
+                              Units Owned
+                            </p>
+                            <p className="font-semibold">
+                              {ownership.unitsOwned}/{ownership.totalUnits}
+                            </p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground mb-0.5">Current Value</p>
+                            <p className="text-muted-foreground mb-0.5">
+                              Current Value
+                            </p>
                             <p className="font-semibold text-accent">
                               ${ownership.currentValue.toLocaleString()}
                             </p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground mb-0.5">Unrealized P/L</p>
-                            <p className={`font-semibold ${ownership.unrealizedGain >= 0 ? 'text-success' : 'text-destructive'}`}>
-                              {ownership.unrealizedGain >= 0 ? '+' : ''}${ownership.unrealizedGain.toLocaleString()}
+                            <p className="text-muted-foreground mb-0.5">
+                              Unrealized P/L
+                            </p>
+                            <p
+                              className={`font-semibold ${
+                                ownership.unrealizedGain >= 0
+                                  ? "text-success"
+                                  : "text-destructive"
+                              }`}
+                            >
+                              {ownership.unrealizedGain >= 0 ? "+" : ""}$
+                              {ownership.unrealizedGain.toLocaleString()}
                             </p>
                           </div>
                           <div>
-                            <p className="text-muted-foreground mb-0.5">Claimable</p>
+                            <p className="text-muted-foreground mb-0.5">
+                              Claimable
+                            </p>
                             <p className="font-semibold text-success">
                               ${ownership.claimableYield}
                             </p>
@@ -272,11 +303,18 @@ export default function Page() {
                             APY: {ownership.apy}%
                           </Badge>
                           <div className="flex gap-2">
-                            <Button size="sm" variant="outline" className="h-7 text-xs">
+                            <Button
+                              size="sm"
+                              variant="outline"
+                              className="h-7 text-xs"
+                            >
                               Details
                             </Button>
                             {ownership.claimableYield > 0 && (
-                              <Button size="sm" className="h-7 text-xs bg-success hover:bg-success/90">
+                              <Button
+                                size="sm"
+                                className="h-7 text-xs bg-success hover:bg-success/90"
+                              >
                                 Claim ${ownership.claimableYield}
                               </Button>
                             )}
@@ -296,7 +334,10 @@ export default function Page() {
                     <p className="text-sm text-muted-foreground mb-4">
                       Start by exploring watch offerings in the launchpad
                     </p>
-                    <Button className="bg-accent hover:bg-accent/90 gap-2" asChild>
+                    <Button
+                      className="bg-accent hover:bg-accent/90 gap-2"
+                      asChild
+                    >
                       <Link href="/launchpad">
                         <Watch className="h-4 w-4" />
                         Explore Offerings
@@ -314,19 +355,31 @@ export default function Page() {
             <GlassCard className="p-6">
               <h3 className="font-semibold mb-4">Quick Actions</h3>
               <div className="space-y-2">
-                <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2"
+                  asChild
+                >
                   <Link href="/launchpad">
                     <Watch className="h-4 w-4" />
                     Browse Offerings
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2"
+                  asChild
+                >
                   <Link href="/assets/register">
                     <Plus className="h-4 w-4" />
                     Tokenize Watch
                   </Link>
                 </Button>
-                <Button variant="outline" className="w-full justify-start gap-2" asChild>
+                <Button
+                  variant="outline"
+                  className="w-full justify-start gap-2"
+                  asChild
+                >
                   <Link href="/marketplace">
                     <Package className="h-4 w-4" />
                     Secondary Market
@@ -346,7 +399,9 @@ export default function Page() {
 
               <div className="space-y-3 mb-4">
                 <div>
-                  <p className="text-sm text-muted-foreground mb-1">Claimable Now</p>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Claimable Now
+                  </p>
                   <p className="text-3xl font-bold text-success">
                     ${stats.claimableYield}
                   </p>
@@ -367,7 +422,10 @@ export default function Page() {
               <h3 className="font-semibold mb-4">Recent Activity</h3>
               <div className="space-y-3">
                 {recentActivity.map((activity) => (
-                  <div key={activity.id} className="flex items-start gap-3 text-sm">
+                  <div
+                    key={activity.id}
+                    className="flex items-start gap-3 text-sm"
+                  >
                     <div className="p-1.5 rounded-lg bg-accent/10 mt-0.5">
                       <Activity className="h-3.5 w-3.5 text-accent" />
                     </div>
