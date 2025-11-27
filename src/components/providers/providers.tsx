@@ -67,7 +67,11 @@ export function Providers({
           disableTransitionOnChange
         >
           {children}
-          <Toaster />
+          <Toaster
+            position="bottom-right"
+            expand={false}
+            richColors
+          />
         </ThemeProvider>
       </QueryClientProvider>
     </WagmiProvider>
