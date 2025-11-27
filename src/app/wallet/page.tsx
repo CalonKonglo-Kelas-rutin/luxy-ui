@@ -26,7 +26,7 @@ const walletData = {
   address: "0x742d35Cc6634C0532925a3b844Bc9e7595f9a8e",
   balance: 11550,
   tokenBalance: 1,
-  network: "Solana Mainnet",
+  network: "Lisk Testnet",
 };
 
 const loanData = {

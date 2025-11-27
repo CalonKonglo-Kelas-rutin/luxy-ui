@@ -1,13 +1,18 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState } from "react";
+import { useRouter } from "next/navigation";
+import { useForm, Controller } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
 import { MainLayout } from "@/components/layouts/main-layout";
 import { GlassCard } from "@/components/ui/glass-card";
 import { ProgressIndicator } from "@/components/ui/progress-indicator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
+import { CheckCircle2 } from "lucide-react";
+import { assetRegistrationSchema, AssetFormData } from "@/schemas";
+import { useAssetRegistration } from "@/hooks/use-asset-registration";
 import {
   Select,
   SelectContent,
@@ -15,118 +20,80 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Upload, X, CheckCircle2, Image as ImageIcon } from "lucide-react";
-import { cn } from "@/lib/utils";
-import type { AssetType, AssetCondition } from "@/types/asset";
-
-const assetTypes: { value: AssetType; label: string }[] = [
-  { value: "jewelry", label: "Jewelry & Precious Metals" },
-  { value: "electronics", label: "Electronics" },
-  { value: "vehicle", label: "Vehicle" },
-  { value: "real-estate", label: "Real Estate" },
-  { value: "collectibles", label: "Collectibles & Art" },
-  { value: "luxury-items", label: "Luxury Items" },
-  { value: "other", label: "Other" },
-];
-
-const conditionOptions: {
-  value: AssetCondition;
-  label: string;
-  description: string;
-}[] = [
-  {
-    value: "excellent",
-    label: "Excellent",
-    description: "Like new, no visible wear",
-  },
-  { value: "good", label: "Good", description: "Minor wear, fully functional" },
-  {
-    value: "fair",
-    label: "Fair",
-    description: "Moderate wear, works properly",
-  },
-  { value: "poor", label: "Poor", description: "Heavy wear, may need repairs" },
-];
 
 const steps = [
-  { label: "Asset Details", description: "Basic information" },
-  { label: "Upload Photos", description: "Visual documentation" },
+  { label: "Watch Details", description: "Basic information" },
   { label: "Review & Submit", description: "Confirm details" },
 ];
 
-export default function RegisterAssetPage() {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [dragActive, setDragActive] = useState(false);
-  const [uploadedImages, setUploadedImages] = useState<string[]>([]);
+const conditionOptions: Array<{ value: string; label: string }> = [
+  { value: "Excellent", label: "Excellent" },
+  { value: "Good", label: "Good" },
+  { value: "Fair", label: "Fair" },
+  { value: "Poor", label: "Poor" },
+];
 
-  const [formData, setFormData] = useState({
-    type: "" as AssetType,
-    name: "",
-    description: "",
-    estimatedValue: "",
-    condition: "" as AssetCondition,
-    purchaseDate: "",
-    purchasePrice: "",
-    serialNumber: "",
+const booleanOptions: Array<{ value: string; label: string }> = [
+  { value: "true", label: "Yes" },
+  { value: "false", label: "No" },
+];
+
+export default function RegisterAssetPage() {
+  const router = useRouter();
+  const { registerAsset, isSubmitting } = useAssetRegistration();
+  const [currentStep, setCurrentStep] = useState(0);
+
+  const {
+    register,
+    handleSubmit,
+    watch,
+    control,
+    formState: { errors, isValid },
+  } = useForm<AssetFormData>({
+    resolver: zodResolver(assetRegistrationSchema),
+    mode: "onChange",
+    defaultValues: {
+      brand: "",
+      model: "",
+      refNumber: "",
+      serialNumber: "",
+      productionYear: new Date().getFullYear(),
+      conditionRating: "Good",
+      hasBox: false,
+      hasPapers: false,
+      estimatedValue: "",
+    },
   });
 
-  const handleDrag = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    if (e.type === "dragenter" || e.type === "dragover") {
-      setDragActive(true);
-    } else if (e.type === "dragleave") {
-      setDragActive(false);
-    }
-  }, []);
+  const formValues = watch();
 
-  const handleFiles = (files: File[]) => {
-    const imageFiles = files.filter((file) => file.type.startsWith("image/"));
+  const onSubmit = async (data: AssetFormData) => {
+    try {
+      await registerAsset({
+        brand: data.brand,
+        model: data.model,
+        refNumber: data.refNumber,
+        serialNumber: data.serialNumber,
+        productionYear: data.productionYear,
+        conditionRating: data.conditionRating,
+        hasBox: data.hasBox,
+        hasPapers: data.hasPapers,
+      });
 
-    imageFiles.forEach((file) => {
-      const reader = new FileReader();
-      reader.onload = (e) => {
-        if (e.target?.result) {
-          setUploadedImages((prev) => [...prev, e.target!.result as string]);
-        }
-      };
-      reader.readAsDataURL(file);
-    });
-  };
-
-  const handleDrop = useCallback((e: React.DragEvent) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setDragActive(false);
-
-    const files = Array.from(e.dataTransfer.files);
-    handleFiles(files);
-  }, []);
-
-  const handleFileInput = (e: React.ChangeEvent<HTMLInputElement>) => {
-    if (e.target.files) {
-      handleFiles(Array.from(e.target.files));
+      router.push("/assets/status");
+    } catch (error) {
+      console.error("Registration failed:", error);
     }
   };
 
-  const removeImage = (index: number) => {
-    setUploadedImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const canProceed = () => {
-    if (currentStep === 0) {
-      return (
-        formData.type &&
-        formData.name &&
-        formData.description &&
-        formData.estimatedValue &&
-        formData.condition
-      );
-    }
-    if (currentStep === 1) {
-      return uploadedImages.length >= 2;
-    }
-    return true;
+  const canProceedToReview = () => {
+    return (
+      formValues.brand &&
+      formValues.model &&
+      formValues.refNumber &&
+      formValues.serialNumber &&
+      isValid
+    );
   };
 
   return (
@@ -150,415 +117,369 @@ export default function RegisterAssetPage() {
         {/* Progress Indicator */}
         <ProgressIndicator steps={steps} currentStep={currentStep} />
 
-        {/* Step Content */}
-        {currentStep === 0 && (
-          <GlassCard gradient hover className="p-6">
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-semibold mb-4">
-                  Asset Information
-                </h2>
-                <p className="text-muted-foreground mb-6">
-                  Provide detailed information about the asset you wish to
-                  tokenize
-                </p>
-              </div>
-
-              <div className="grid gap-6">
-                {/* Asset Type */}
-                <div className="space-y-2">
-                  <Label htmlFor="type">Asset Type *</Label>
-                  <Select
-                    value={formData.type}
-                    onValueChange={(value) =>
-                      setFormData({ ...formData, type: value as AssetType })
-                    }
-                  >
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select asset type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {assetTypes.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                {/* Asset Name */}
-                <div className="space-y-2">
-                  <Label htmlFor="name">Asset Name *</Label>
-                  <Input
-                    id="name"
-                    placeholder="e.g., 18K Gold Rolex Submariner"
-                    value={formData.name}
-                    onChange={(e) =>
-                      setFormData({ ...formData, name: e.target.value })
-                    }
-                  />
-                </div>
-
-                {/* Description */}
-                <div className="space-y-2">
-                  <Label htmlFor="description">Description *</Label>
-                  <Textarea
-                    id="description"
-                    placeholder="Provide a detailed description of the asset..."
-                    rows={4}
-                    value={formData.description}
-                    onChange={(e) =>
-                      setFormData({ ...formData, description: e.target.value })
-                    }
-                  />
-                </div>
-
-                {/* Estimated Value & Condition */}
-                <div className="grid md:grid-cols-2 gap-4">
-                  <div className="space-y-2">
-                    <Label htmlFor="value">Estimated Value (USD) *</Label>
-                    <Input
-                      id="value"
-                      type="number"
-                      placeholder="10000"
-                      value={formData.estimatedValue}
-                      onChange={(e) =>
-                        setFormData({
-                          ...formData,
-                          estimatedValue: e.target.value,
-                        })
-                      }
-                    />
-                  </div>
-
-                  <div className="space-y-2">
-                    <Label htmlFor="condition">Condition *</Label>
-                    <Select
-                      value={formData.condition}
-                      onValueChange={(value) =>
-                        setFormData({
-                          ...formData,
-                          condition: value as AssetCondition,
-                        })
-                      }
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select condition" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        {conditionOptions.map((opt) => (
-                          <SelectItem key={opt.value} value={opt.value}>
-                            <div>
-                              <div className="font-medium">{opt.label}</div>
-                              <div className="text-xs text-muted-foreground">
-                                {opt.description}
-                              </div>
-                            </div>
-                          </SelectItem>
-                        ))}
-                      </SelectContent>
-                    </Select>
-                  </div>
-                </div>
-
-                {/* Optional Fields */}
-                <div className="pt-4 border-t">
-                  <h3 className="text-sm font-medium mb-4 text-muted-foreground">
-                    Optional Information
-                  </h3>
-                  <div className="grid md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="purchaseDate">Purchase Date</Label>
-                      <Input
-                        id="purchaseDate"
-                        type="date"
-                        value={formData.purchaseDate}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            purchaseDate: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="purchasePrice">
-                        Purchase Price (USD)
-                      </Label>
-                      <Input
-                        id="purchasePrice"
-                        type="number"
-                        placeholder="8000"
-                        value={formData.purchasePrice}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            purchasePrice: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor="serialNumber">Serial/ID Number</Label>
-                      <Input
-                        id="serialNumber"
-                        placeholder="ABC123456"
-                        value={formData.serialNumber}
-                        onChange={(e) =>
-                          setFormData({
-                            ...formData,
-                            serialNumber: e.target.value,
-                          })
-                        }
-                      />
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </GlassCard>
-        )}
-
-        {currentStep === 1 && (
-          <GlassCard gradient hover className="p-6">
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-semibold mb-4">
-                  Upload Asset Photos
-                </h2>
-                <p className="text-muted-foreground mb-6">
-                  Upload at least 2 high-quality photos of your asset from
-                  different angles
-                </p>
-              </div>
-
-              {/* Drag & Drop Zone */}
-              <div
-                onDragEnter={handleDrag}
-                onDragLeave={handleDrag}
-                onDragOver={handleDrag}
-                onDrop={handleDrop}
-                className={cn(
-                  "relative border-2 border-dashed rounded-xl p-12 transition-all duration-300 cursor-pointer group",
-                  dragActive
-                    ? "border-accent bg-accent/5 scale-[1.02]"
-                    : "border-border hover:border-accent/50 hover:bg-accent/5"
-                )}
-              >
-                <input
-                  type="file"
-                  multiple
-                  accept="image/*"
-                  onChange={handleFileInput}
-                  className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
-                />
-
-                <div className="flex flex-col items-center justify-center text-center space-y-4">
-                  <div className="p-4 rounded-full bg-accent/10 group-hover:bg-accent/20 transition-colors">
-                    <Upload className="h-8 w-8 text-accent" />
-                  </div>
-                  <div>
-                    <p className="text-lg font-medium">
-                      Drop files here or click to browse
-                    </p>
-                    <p className="text-sm text-muted-foreground mt-1">
-                      Supports: JPG, PNG, WebP (Max 10MB each)
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              {/* Uploaded Images */}
-              {uploadedImages.length > 0 && (
+        <form onSubmit={handleSubmit(onSubmit)}>
+          {/* Step 1: Watch Details */}
+          {currentStep === 0 && (
+            <GlassCard gradient hover className="p-6">
+              <div className="space-y-6">
                 <div>
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="font-medium">
-                      Uploaded Images ({uploadedImages.length})
-                    </h3>
-                    {uploadedImages.length >= 2 && (
-                      <div className="flex items-center text-success text-sm">
-                        <CheckCircle2 className="h-4 w-4 mr-1" />
-                        Minimum requirement met
-                      </div>
+                  <h2 className="text-2xl font-semibold mb-4">
+                    Asset Information
+                  </h2>
+                  <p className="text-muted-foreground mb-6">
+                    Provide detailed information about the asset you wish to
+                    tokenize
+                  </p>
+                </div>
+
+                <div className="grid gap-6">
+                  {/* Brand Name */}
+                  <div className="space-y-2">
+                    <Label htmlFor="brand">
+                      Brand Name <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="brand"
+                      placeholder="e.g., Rolex"
+                      {...register("brand")}
+                    />
+                    {errors.brand && (
+                      <p className="text-sm text-destructive">
+                        {errors.brand.message}
+                      </p>
                     )}
                   </div>
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-                    {uploadedImages.map((image, index) => (
-                      <div
-                        key={index}
-                        className="relative group aspect-square rounded-lg overflow-hidden border bg-muted"
-                      >
-                        <img
-                          src={image}
-                          alt={`Upload ${index + 1}`}
-                          className="w-full h-full object-cover"
+
+                  {/* Model */}
+                  <div className="space-y-2">
+                    <Label htmlFor="model">
+                      Model <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="model"
+                      placeholder="e.g., Submariner"
+                      {...register("model")}
+                    />
+                    {errors.model && (
+                      <p className="text-sm text-destructive">
+                        {errors.model.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Reference Number */}
+                  <div className="space-y-2">
+                    <Label htmlFor="refNumber">
+                      Reference Number{" "}
+                      <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="refNumber"
+                      placeholder="e.g., 116610LN"
+                      {...register("refNumber")}
+                    />
+                    {errors.refNumber && (
+                      <p className="text-sm text-destructive">
+                        {errors.refNumber.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Serial Number */}
+                  <div className="space-y-2">
+                    <Label htmlFor="serialNumber">
+                      Serial Number <span className="text-destructive">*</span>
+                    </Label>
+                    <Input
+                      id="serialNumber"
+                      placeholder="Enter serial number"
+                      {...register("serialNumber")}
+                    />
+                    {errors.serialNumber && (
+                      <p className="text-sm text-destructive">
+                        {errors.serialNumber.message}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Production Year & Condition */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="productionYear">Production Year</Label>
+                      <Input
+                        id="productionYear"
+                        type="number"
+                        {...register("productionYear", { valueAsNumber: true })}
+                      />
+                      {errors.productionYear && (
+                        <p className="text-sm text-destructive">
+                          {errors.productionYear.message}
+                        </p>
+                      )}
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="conditionRating">Condition</Label>
+                      <Controller
+                        name="conditionRating"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            value={field.value}
+                            onValueChange={field.onChange}
+                          >
+                            <SelectTrigger type="button" className="w-full">
+                              <SelectValue placeholder="Select condition" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {conditionOptions.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Box & Papers */}
+                  <div className="grid md:grid-cols-2 gap-4">
+                    <div className="space-y-2">
+                      <Label htmlFor="hasBox">Do you still have the box?</Label>
+                      <Controller
+                        name="hasBox"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            value={field.value ? "true" : "false"}
+                            onValueChange={(value) =>
+                              field.onChange(value === "true")
+                            }
+                          >
+                            <SelectTrigger type="button" className="w-full">
+                              <SelectValue placeholder="Select an option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {booleanOptions.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </div>
+
+                    <div className="space-y-2">
+                      <Label htmlFor="hasPapers">
+                        Do you still have the papers?
+                      </Label>
+                      <Controller
+                        name="hasPapers"
+                        control={control}
+                        render={({ field }) => (
+                          <Select
+                            value={field.value ? "true" : "false"}
+                            onValueChange={(value) =>
+                              field.onChange(value === "true")
+                            }
+                          >
+                            <SelectTrigger type="button" className="w-full">
+                              <SelectValue placeholder="Select an option" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {booleanOptions.map((option) => (
+                                <SelectItem
+                                  key={option.value}
+                                  value={option.value}
+                                >
+                                  {option.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        )}
+                      />
+                    </div>
+                  </div>
+
+                  {/* Optional Fields */}
+                  <div className="pt-4 border-t">
+                    <h3 className="text-sm font-medium mb-4 text-muted-foreground">
+                      Optional Information
+                    </h3>
+                    <div className="grid gap-4">
+                      <div className="space-y-2">
+                        <Label htmlFor="estimatedValue">
+                          Estimated Value (USD)
+                        </Label>
+                        <Input
+                          id="estimatedValue"
+                          placeholder="10000"
+                          {...register("estimatedValue")}
                         />
-                        <button
-                          onClick={() => removeImage(index)}
-                          className="absolute top-2 right-2 p-1.5 bg-destructive/90 hover:bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
-                        >
-                          <X className="h-4 w-4" />
-                        </button>
                       </div>
-                    ))}
+                    </div>
                   </div>
                 </div>
-              )}
-            </div>
-          </GlassCard>
-        )}
-
-        {currentStep === 2 && (
-          <GlassCard gradient hover className="p-6">
-            <div className="space-y-6">
-              <div>
-                <h2 className="text-2xl font-semibold mb-4">Review & Submit</h2>
-                <p className="text-muted-foreground mb-6">
-                  Please review your asset details before submission
-                </p>
               </div>
+            </GlassCard>
+          )}
 
+          {/* Step 2: Review & Submit */}
+          {currentStep === 1 && (
+            <GlassCard gradient hover className="p-6">
               <div className="space-y-6">
-                {/* Asset Summary */}
-                <div className="grid md:grid-cols-2 gap-6">
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Asset Type
-                      </p>
-                      <p className="font-medium">
-                        {
-                          assetTypes.find((t) => t.value === formData.type)
-                            ?.label
-                        }
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Asset Name
-                      </p>
-                      <p className="font-medium">{formData.name}</p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Description
-                      </p>
-                      <p className="text-sm">{formData.description}</p>
-                    </div>
-                  </div>
+                <div>
+                  <h2 className="text-2xl font-semibold mb-4">
+                    Review & Submit
+                  </h2>
+                  <p className="text-muted-foreground mb-6">
+                    Please review your asset details before submission
+                  </p>
+                </div>
 
-                  <div className="space-y-4">
-                    <div>
-                      <p className="text-sm text-muted-foreground">
-                        Estimated Value
-                      </p>
-                      <p className="font-medium text-2xl text-accent">
-                        ${Number(formData.estimatedValue).toLocaleString()}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-sm text-muted-foreground">Condition</p>
-                      <p className="font-medium">
-                        {
-                          conditionOptions.find(
-                            (c) => c.value === formData.condition
-                          )?.label
-                        }
-                      </p>
-                    </div>
-                    {formData.serialNumber && (
+                <div className="space-y-6">
+                  {/* Asset Summary */}
+                  <div className="grid md:grid-cols-2 gap-6">
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">Brand</p>
+                        <p className="font-medium">{formValues.brand}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">Model</p>
+                        <p className="font-medium">{formValues.model}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Reference Number
+                        </p>
+                        <p className="font-medium">{formValues.refNumber}</p>
+                      </div>
                       <div>
                         <p className="text-sm text-muted-foreground">
                           Serial Number
                         </p>
-                        <p className="font-mono text-sm">
-                          {formData.serialNumber}
+                        <p className="font-medium">{formValues.serialNumber}</p>
+                      </div>
+                    </div>
+
+                    <div className="space-y-4">
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Production Year
+                        </p>
+                        <p className="font-medium">
+                          {formValues.productionYear}
                         </p>
                       </div>
-                    )}
-                  </div>
-                </div>
-
-                {/* Images Preview */}
-                <div>
-                  <p className="text-sm text-muted-foreground mb-3">
-                    Uploaded Photos ({uploadedImages.length})
-                  </p>
-                  <div className="grid grid-cols-3 md:grid-cols-6 gap-3">
-                    {uploadedImages.map((image, index) => (
-                      <div
-                        key={index}
-                        className="aspect-square rounded-lg overflow-hidden border"
-                      >
-                        <img
-                          src={image}
-                          alt={`Preview ${index + 1}`}
-                          className="w-full h-full object-cover"
-                        />
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Condition
+                        </p>
+                        <p className="font-medium">
+                          {formValues.conditionRating}
+                        </p>
                       </div>
-                    ))}
+                      <div>
+                        <p className="text-sm text-muted-foreground">
+                          Accessories
+                        </p>
+                        <p className="font-medium">
+                          {formValues.hasBox && "Box"}
+                          {formValues.hasBox && formValues.hasPapers && " & "}
+                          {formValues.hasPapers && "Papers"}
+                          {!formValues.hasBox &&
+                            !formValues.hasPapers &&
+                            "None"}
+                        </p>
+                      </div>
+                    </div>
                   </div>
-                </div>
 
-                {/* Important Notice */}
-                <div className="p-4 bg-info/10 border border-info/20 rounded-lg">
-                  <h4 className="font-medium mb-2 flex items-center text-info">
-                    <ImageIcon className="h-4 w-4 mr-2" />
-                    Next Steps
-                  </h4>
-                  <ul className="text-sm space-y-1 text-muted-foreground">
-                    <li>
-                      • Your asset will be reviewed by our verification team
-                    </li>
-                    <li>
-                      • You will receive instructions for offline delivery to
-                      the pawnshop
-                    </li>
-                    <li>
-                      • The pawnshop will conduct physical verification and
-                      appraisal
-                    </li>
-                    <li>• Once approved, you can proceed with tokenization</li>
-                  </ul>
+                  {/* Next Steps Info */}
+                  <div className="p-4 bg-info/10 border border-info/20 rounded-lg">
+                    <h4 className="font-semibold mb-2 flex items-center gap-2">
+                      <CheckCircle2 className="h-5 w-5 text-info" />
+                      What happens next?
+                    </h4>
+                    <ul className="space-y-2 text-sm text-muted-foreground">
+                      <li className="flex items-start">
+                        <span className="mr-2">1.</span>
+                        <span>
+                          Your asset will be submitted for verification
+                        </span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="mr-2">2.</span>
+                        <span>
+                          Our partner pawnshops will authenticate and appraise
+                          your asset
+                        </span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="mr-2">3.</span>
+                        <span>
+                          Once approved, you can proceed to tokenization
+                        </span>
+                      </li>
+                      <li className="flex items-start">
+                        <span className="mr-2">4.</span>
+                        <span>
+                          Track your asset status in the Assets dashboard
+                        </span>
+                      </li>
+                    </ul>
+                  </div>
                 </div>
               </div>
-            </div>
-          </GlassCard>
-        )}
-
-        {/* Navigation Buttons */}
-        <div className="flex justify-between">
-          <Button
-            variant="outline"
-            onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
-            disabled={currentStep === 0}
-          >
-            Previous
-          </Button>
-
-          {currentStep < steps.length - 1 ? (
-            <Button
-              onClick={() => setCurrentStep((prev) => prev + 1)}
-              disabled={!canProceed()}
-              className="bg-accent hover:bg-accent/90"
-            >
-              Continue
-            </Button>
-          ) : (
-            <Button
-              onClick={() => {
-                // Handle submission
-                console.log("Submitting asset...", formData);
-              }}
-              className="bg-accent hover:bg-accent/90"
-            >
-              Submit Asset
-            </Button>
+            </GlassCard>
           )}
-        </div>
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between py-8">
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setCurrentStep((prev) => Math.max(0, prev - 1))}
+              disabled={currentStep === 0 || isSubmitting}
+            >
+              Previous
+            </Button>
+
+            {currentStep < steps.length - 1 ? (
+              <Button
+                type="button"
+                onClick={(e) => {
+                  e.preventDefault();
+                  setCurrentStep((prev) => prev + 1);
+                }}
+                disabled={!canProceedToReview()}
+                className="bg-accent hover:bg-accent/90"
+              >
+                Continue
+              </Button>
+            ) : (
+              <Button
+                type="submit"
+                disabled={isSubmitting}
+                className="bg-accent hover:bg-accent/90"
+              >
+                {isSubmitting ? "Submitting..." : "Submit Asset"}
+              </Button>
+            )}
+          </div>
+        </form>
       </div>
     </MainLayout>
   );

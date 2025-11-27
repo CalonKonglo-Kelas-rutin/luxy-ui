@@ -1,0 +1,61 @@
+// Asset Service - Business logic for asset registration and management
+
+import api, { ApiError } from "@/lib/api";
+import {
+  AssetRegistrationRequest,
+  AssetRegistrationResponse,
+} from "@/types/asset";
+import { AxiosError } from "axios";
+
+export const assetService = {
+  /**
+   * Register a new asset (watch) for tokenization
+   */
+  registerAsset: async (
+    assetData: AssetRegistrationRequest
+  ): Promise<AssetRegistrationResponse> => {
+    try {
+      const response = await api.post<AssetRegistrationResponse>(
+        "/api/v1/rwa/request",
+        assetData
+      );
+
+      return response.data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError("Failed to create customer", undefined, error);
+    }
+  },
+
+  /**
+   * Get asset by ID
+   */
+  getAssetById: async (assetId: string): Promise<AssetRegistrationResponse> => {
+    try {
+      const response = await api.get(`/api/v1/rwa/${assetId}`);
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      const message =
+        axiosError.response?.data?.message || "Failed to fetch asset";
+      throw new Error(message);
+    }
+  },
+
+  /**
+   * Get user's assets
+   */
+  getUserAssets: async (ownerId: string): Promise<AssetRegistrationResponse[]> => {
+    try {
+      const response = await api.get(`/api/v1/rwa/owner/${ownerId}`);
+      return response.data;
+    } catch (error) {
+      const axiosError = error as AxiosError<{ message: string }>;
+      const message =
+        axiosError.response?.data?.message || "Failed to fetch assets";
+      throw new Error(message);
+    }
+  },
+};

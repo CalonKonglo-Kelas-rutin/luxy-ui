@@ -16,7 +16,7 @@ const geistMono = Geist_Mono({
 });
 
 export const metadata: Metadata = {
-  title: "Chain Credit",
+  title: "Luxy",
   description: "A decentralized credit scoring platform leveraging blockchain technology to provide transparent and secure credit assessments.",
 };
 
