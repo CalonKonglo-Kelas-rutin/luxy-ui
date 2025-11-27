@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layouts/main-layout";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Watch, Shield, Clock, Sparkles, SearchIcon } from "lucide-react";
+import { Shield, Clock, Sparkles, SearchIcon } from "lucide-react";
 import Link from "next/link";
 import {
   InputGroup,
@@ -13,134 +13,11 @@ import {
 } from "@/components/ui/input-group";
 import { GlareCard } from "@/components/ui/glare-card";
 
-// Mock data for watch offerings
-type OfferingStatus = "active" | "upcoming" | "sold-out";
-
-interface Offering {
-  id: string;
-  assetName: string;
-  brand: string;
-  model: string;
-  year: number;
-  condition: string;
-  totalUnits: number;
-  pricePerUnit: number;
-  soldUnits: number;
-  availableUnits: number;
-  soldPercentage: number;
-  rentalYieldApy: number;
-  totalValue: number;
-  investors: number;
-  status: OfferingStatus;
-  authenticityVerified: boolean;
-  images: string[];
-}
-
-const featuredOfferings: Offering[] = [
-  {
-    id: "OFF-001",
-    assetName: "Rolex Submariner 116610LN",
-    brand: "Rolex",
-    model: "Submariner Date 116610LN",
-    year: 2020,
-    condition: "Mint",
-    totalUnits: 100,
-    pricePerUnit: 350,
-    soldUnits: 75,
-    availableUnits: 25,
-    soldPercentage: 75,
-    rentalYieldApy: 8.5,
-    totalValue: 35000,
-    investors: 28,
-    status: "active",
-    authenticityVerified: true,
-    images: ["/api/placeholder/400/300"],
-  },
-  {
-    id: "OFF-002",
-    assetName: "Patek Philippe Nautilus 5711/1A",
-    brand: "Patek Philippe",
-    model: "Nautilus 5711/1A-010",
-    year: 2021,
-    condition: "Excellent",
-    totalUnits: 200,
-    pricePerUnit: 1200,
-    soldUnits: 168,
-    availableUnits: 32,
-    soldPercentage: 84,
-    rentalYieldApy: 6.2,
-    totalValue: 240000,
-    investors: 52,
-    status: "active",
-    authenticityVerified: true,
-    images: ["/api/placeholder/400/300"],
-  },
-];
-
-const allOfferings: Offering[] = [
-  ...featuredOfferings,
-  {
-    id: "OFF-003",
-    assetName: "Audemars Piguet Royal Oak 15400ST",
-    brand: "Audemars Piguet",
-    model: "Royal Oak 15400ST.OO.1220ST.03",
-    year: 2019,
-    condition: "Very Good",
-    totalUnits: 150,
-    pricePerUnit: 383,
-    soldUnits: 142,
-    availableUnits: 8,
-    soldPercentage: 94.7,
-    rentalYieldApy: 7.8,
-    totalValue: 57450,
-    investors: 41,
-    status: "active",
-    authenticityVerified: true,
-    images: ["/api/placeholder/400/300"],
-  },
-  {
-    id: "OFF-004",
-    assetName: "Omega Speedmaster Moonwatch",
-    brand: "Omega",
-    model: "Speedmaster Professional Moonwatch",
-    year: 2022,
-    condition: "New",
-    totalUnits: 80,
-    pricePerUnit: 75,
-    soldUnits: 0,
-    availableUnits: 80,
-    soldPercentage: 0,
-    rentalYieldApy: 9.2,
-    totalValue: 6000,
-    investors: 0,
-    status: "upcoming",
-    authenticityVerified: true,
-    images: ["/api/placeholder/400/300"],
-  },
-  {
-    id: "OFF-005",
-    assetName: "Cartier Santos Large",
-    brand: "Cartier",
-    model: "Santos de Cartier Large WSSA0029",
-    year: 2021,
-    condition: "Excellent",
-    totalUnits: 120,
-    pricePerUnit: 58,
-    soldUnits: 120,
-    availableUnits: 0,
-    soldPercentage: 100,
-    rentalYieldApy: 5.5,
-    totalValue: 6960,
-    investors: 34,
-    status: "sold-out",
-    authenticityVerified: true,
-    images: ["/api/placeholder/400/300"],
-  },
-];
+import { allTokenizedAsset } from "./data";
 
 const stats = {
-  totalOfferings: allOfferings.length,
-  totalValue: allOfferings.reduce((sum, offer) => sum + offer.totalValue, 0),
+  totalOfferings: allTokenizedAsset.length,
+  totalValue: allTokenizedAsset.reduce((sum, offer) => sum + offer.totalValue, 0),
   avgYield: 7.4,
   activeInvestors: 155,
 };
@@ -188,7 +65,7 @@ export default function LaunchpadPage() {
         <div>
           <h2 className="text-2xl font-semibold mb-4">All Offerings</h2>
           <div className="grid md:grid-cols-3 gap-4">
-            {allOfferings.map((offering) => (
+            {allTokenizedAsset.map((offering) => (
               <GlassCard
                 key={offering.id}
                 className="overflow-hidden group cursor-pointer hover:border-accent/50 transition-all"

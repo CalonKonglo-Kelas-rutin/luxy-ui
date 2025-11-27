@@ -77,14 +77,3 @@ export interface PawnshopVerification {
   photos: string[];
   certificateUrl?: string;
 }
-
-export interface TokenizedAsset {
-  assetId: string;
-  tokenId: string;
-  tokenSymbol: string;
-  contractAddress: string;
-  chainId: number;
-  mintedAt: string;
-  totalSupply: number;
-  liquidityPoolAddress?: string;
-}

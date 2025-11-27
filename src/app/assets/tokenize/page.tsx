@@ -107,7 +107,7 @@ export default function TokenizationPage() {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Chain</span>
-                  <span className="font-medium">Solana</span>
+                  <span className="font-medium">Lisk</span>
                 </div>
                 <div className="flex justify-between">
                   <span className="text-muted-foreground">Liquidity Provider</span>
