@@ -25,20 +25,9 @@ export interface AssetRegistrationRequest {
   imageUrls: string[];
 }
 
-// Asset Registration API Response
-export interface AssetRegistrationResponse {
-  success: boolean;
-  message: string;
-  data?: {
-    assetId: string;
-    status: string;
-    createdAt: string;
-  };
-}
-
 // Asset entity from backend
 export interface Asset {
-  id: string;
+  id: string | number;
   ownerId: string;
   brand: string;
   model: string;
@@ -48,14 +37,20 @@ export interface Asset {
   conditionRating: ConditionRating;
   hasBox: boolean;
   hasPapers: boolean;
-  imageUrls: string[];
-  verificationStatus: VerificationStatus;
+  imageUrls: string[] | null;
+  documentsUrl?: string | null;
+  status: string;
+  verificationStatus?: VerificationStatus;
   createdAt: string;
   updatedAt: string;
   submittedAt?: string;
   approvedAt?: string;
-  tokenId?: string;
+  tokenId?: string | null;
   appraisedValue?: number;
+  appraisedValueUsd?: number | null;
+  auditorNotes?: string | null;
+  ipfsMetadataUri?: string | null;
+  txHashMint?: string | null;
 }
 
 export interface VerificationTimeline {
@@ -64,16 +59,4 @@ export interface VerificationTimeline {
   description: string;
   completedBy?: string;
   notes?: string;
-}
-
-export interface PawnshopVerification {
-  pawnshopId: string;
-  pawnshopName: string;
-  verifierName: string;
-  verificationDate: string;
-  appraisedValue: number;
-  conditionRating: ConditionRating;
-  notes: string;
-  photos: string[];
-  certificateUrl?: string;
 }

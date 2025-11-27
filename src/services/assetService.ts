@@ -3,7 +3,7 @@
 import api, { ApiError } from "@/lib/api";
 import {
   AssetRegistrationRequest,
-  AssetRegistrationResponse,
+  Asset,
 } from "@/types/asset";
 import { AxiosError } from "axios";
 
@@ -13,9 +13,9 @@ export const assetService = {
    */
   registerAsset: async (
     assetData: AssetRegistrationRequest
-  ): Promise<AssetRegistrationResponse> => {
+  ): Promise<Asset> => {
     try {
-      const response = await api.post<AssetRegistrationResponse>(
+      const response = await api.post<Asset>(
         "/api/v1/rwa/request",
         assetData
       );
@@ -25,14 +25,14 @@ export const assetService = {
       if (error instanceof ApiError) {
         throw error;
       }
-      throw new ApiError("Failed to create customer", undefined, error);
+      throw new ApiError("Failed to register asset", undefined, error);
     }
   },
 
   /**
    * Get asset by ID
    */
-  getAssetById: async (assetId: string): Promise<AssetRegistrationResponse> => {
+  getAssetById: async (assetId: string): Promise<Asset> => {
     try {
       const response = await api.get(`/api/v1/rwa/${assetId}`);
       return response.data;
@@ -47,7 +47,7 @@ export const assetService = {
   /**
    * Get user's assets
    */
-  getUserAssets: async (ownerId: string): Promise<AssetRegistrationResponse[]> => {
+  getUserAssets: async (ownerId: string): Promise<Asset[]> => {
     try {
       const response = await api.get(`/api/v1/rwa/owner/${ownerId}`);
       return response.data;

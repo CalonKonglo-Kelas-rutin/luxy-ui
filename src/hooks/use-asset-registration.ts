@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useWallet } from './use-wallet';
 import { assetService } from '@/services/assetService';
-import { AssetRegistrationResponse, AssetRegistrationRequest } from '@/types';
+import { Asset, AssetRegistrationRequest } from '@/types';
 import { toast } from 'sonner';
 
 export function useAssetRegistration() {
@@ -16,7 +16,7 @@ export function useAssetRegistration() {
    */
   const registerAsset = useCallback(async (
     assetData: Omit<AssetRegistrationRequest, 'ownerId' | 'imageUrls'>
-  ): Promise<AssetRegistrationResponse> => {
+  ): Promise<Asset> => {
     if (!address) {
       toast.error('Please connect your wallet first');
       throw new Error('Wallet not connected');
@@ -33,11 +33,11 @@ export function useAssetRegistration() {
 
       const result = await assetService.registerAsset(registrationData);
 
-      if (!result.success) {
-        throw new Error(result.message);
+      if (!result) {
+        throw new Error('Registration failed - no data returned');
       }
 
-      toast.success(result.message || 'Asset registered successfully!');
+      toast.success('Asset registered successfully!');
       return result;
     } catch (err) {
       const errorMessage = err instanceof Error ? err.message : 'Failed to register asset';
