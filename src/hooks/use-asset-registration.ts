@@ -13,10 +13,10 @@ export function useAssetRegistration() {
 
   /**
    * Register asset with backend API
-   * Images will be handled by the API in the future
+   * Handles image upload as FormData
    */
   const registerAsset = useCallback(async (
-    assetData: Omit<AssetRegistrationRequest, 'ownerId' | 'imageUrls'>
+    assetData: Omit<AssetRegistrationRequest, 'ownerId'>
   ): Promise<Asset> => {
     if (!address) {
       toast.error('Please connect your wallet first');
@@ -29,7 +29,6 @@ export function useAssetRegistration() {
       const registrationData: AssetRegistrationRequest = {
         ...assetData,
         ownerId: address,
-        imageUrls: [], // TODO: Handle image upload
       };
 
       const result = await assetService.registerAsset(registrationData);
@@ -71,10 +70,29 @@ export function useAssetRegistration() {
     }
   }, [address]);
 
+  /**
+   * Get asset by ID from backend
+   */
+  const getAssetById = useCallback(async (assetId: string): Promise<Asset> => {
+    setIsLoading(true);
+
+    try {
+      const asset = await assetService.getAssetById(assetId);
+      return asset;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch asset details';
+      toast.error(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return {
     isSubmitting,
     isLoading,
     registerAsset,
     getUserAssets,
+    getAssetById,
   };
 }

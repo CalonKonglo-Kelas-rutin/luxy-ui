@@ -1,11 +1,11 @@
 // Asset Service - Business logic for asset registration and management
 
-import api, { ApiError } from "@/lib/api";
+import http from "@/lib/http";
+import { ApiError } from "@/lib/api";
 import {
   AssetRegistrationRequest,
   Asset,
 } from "@/types/asset";
-import { AxiosError } from "axios";
 
 export const assetService = {
   /**
@@ -15,9 +15,10 @@ export const assetService = {
     assetData: AssetRegistrationRequest
   ): Promise<Asset> => {
     try {
-      const response = await api.post<Asset>(
+      const response = await http.post<Asset>(
         "/api/v1/rwa/request",
-        assetData
+        assetData,
+        { formData: true }
       );
 
       return response.data;
@@ -34,13 +35,13 @@ export const assetService = {
    */
   getAssetById: async (assetId: string): Promise<Asset> => {
     try {
-      const response = await api.get(`/api/v1/rwa/${assetId}`);
+      const response = await http.get(`/api/v1/rwa/assets/${assetId}`);
       return response.data;
     } catch (error) {
-      const axiosError = error as AxiosError<{ message: string }>;
-      const message =
-        axiosError.response?.data?.message || "Failed to fetch asset";
-      throw new Error(message);
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError("Failed to get asset", undefined, error);
     }
   },
 
@@ -49,13 +50,13 @@ export const assetService = {
    */
   getUserRequestedAssets: async (ownerId: string): Promise<Asset[]> => {
     try {
-      const response = await api.get(`/api/v1/rwa/requests`, { params: { userId: ownerId } });
+      const response = await http.get(`/api/v1/rwa/requests`, { params: { userId: ownerId } });
       return response.data;
     } catch (error) {
-      const axiosError = error as AxiosError<{ message: string }>;
-      const message =
-        axiosError.response?.data?.message || "Failed to fetch assets";
-      throw new Error(message);
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError("Failed to fetch assets", undefined, error);
     }
   },
 };

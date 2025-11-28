@@ -12,6 +12,13 @@ export const assetRegistrationSchema = z.object({
   conditionRating: z.enum(["Excellent", "Good", "Fair", "Poor"]),
   hasBox: z.boolean(),
   hasPapers: z.boolean(),
+  image: z.instanceof(File).nullable().refine(
+    (file) => !file || file.size <= 5 * 1024 * 1024,
+    "Image must be less than 5MB"
+  ).refine(
+    (file) => !file || file.type.startsWith("image/"),
+    "File must be an image"
+  ),
   description: z.string().optional(),
   estimatedValue: z.string().optional(),
   purchaseDate: z.string().optional(),

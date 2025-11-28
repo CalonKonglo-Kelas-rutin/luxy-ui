@@ -2,7 +2,7 @@ export type ConditionRating = "Excellent" | "Good" | "Fair" | "Poor";
 
 export type VerificationStatus = 
   | "draft"
-  | "submitted"
+  | "pending"
   | "in-transit"
   | "at-pawnshop"
   | "verifying"
@@ -22,7 +22,7 @@ export interface AssetRegistrationRequest {
   conditionRating: ConditionRating;
   hasBox: boolean;
   hasPapers: boolean;
-  imageUrls: string[];
+  image: File | null;
 }
 
 // Asset entity from backend
