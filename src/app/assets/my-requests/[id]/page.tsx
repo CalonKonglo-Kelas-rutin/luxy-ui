@@ -39,7 +39,7 @@ const messages = [
   },
 ];
 
-export default function AssetStatusPage() {
+export default function MyRequestDetailsPage() {
   const params = useParams();
   const assetId = params.id as string;
   const { getAssetById, isLoading } = useAssetRegistration();
@@ -70,7 +70,7 @@ export default function AssetStatusPage() {
       <MainLayout
         breadcrumbs={[
           { label: "Assets", href: "/assets" },
-          { label: "Status", href: "/assets/verification" },
+          { label: "My Requests", href: "/assets/my-requests" },
         ]}
       >
         <div className="flex flex-col items-center justify-center py-20">
@@ -87,7 +87,7 @@ export default function AssetStatusPage() {
       <MainLayout
         breadcrumbs={[
           { label: "Assets", href: "/assets" },
-          { label: "Status", href: "/assets/verification" },
+          { label: "My Requests", href: "/assets/my-requests" },
         ]}
       >
         <GlassCard className="p-8 border-destructive/20 bg-destructive/5 text-center max-w-2xl mx-auto mt-20">
@@ -115,45 +115,27 @@ export default function AssetStatusPage() {
   // Static timeline with dynamic timestamps from asset data
   const timelineEvents: VerificationTimeline[] = [
     {
-      status: "pending",
+      status: "PENDING",
       timestamp: asset.createdAt ? formatDate(asset.createdAt) : "",
       description: "Asset registration submitted successfully",
       completedBy: "System",
     },
     {
-      status: "in-transit",
-      timestamp: asset.updatedAt && asset.status.toLowerCase() !== "pending" ? formatDate(asset.updatedAt) : "",
-      description: "Asset picked up by logistics partner",
-      completedBy: asset.status.toLowerCase() !== "pending" ? "Swift Logistics" : undefined,
-    },
-    {
-      status: "at-pawnshop",
-      timestamp: "",
-      description: "Asset delivered to verification partner",
-      completedBy: undefined,
-    },
-    {
-      status: "verifying",
-      timestamp: "",
-      description: "Physical verification and authenticity check in progress",
-      completedBy: undefined,
-    },
-    {
-      status: "appraising",
-      timestamp: "",
-      description: "Professional appraisal and valuation pending",
-      completedBy: undefined,
-    },
-    {
-      status: "approved",
+      status: "APPROVED",
       timestamp: asset.approvedAt ? formatDate(asset.approvedAt) : "",
-      description: "Final approval and tokenization eligibility",
-      completedBy: asset.status.toLowerCase() === "approved" || asset.status.toLowerCase() === "tokenized" ? "Verification Team" : undefined,
+      description: "Asset approved for tokenization",
+      completedBy: "Verification Team",
+    },
+    {
+      status: "TOKENIZED",
+      timestamp: asset.status === "TOKENIZED" ? formatDate(asset.updatedAt) : "",
+      description: "Asset successfully tokenized",
+      completedBy: "System",
     },
   ];
 
   const currentStepIndex = timelineEvents.findIndex(
-    (event) => event.status === asset.status.toLowerCase()
+    (event) => event.status === asset.status
   );
 
   const formattedEvents = timelineEvents.map((event, index) => ({

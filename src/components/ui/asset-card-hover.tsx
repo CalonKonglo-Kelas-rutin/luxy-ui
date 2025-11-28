@@ -209,7 +209,7 @@ const AssetCard = ({ asset, getStatusColor, getStatusIcon }: AssetCardProps) => 
             variant="outline"
             asChild
           >
-            <Link href={`/assets/verification/${asset.id}`}>
+            <Link href={`/assets/my-requests/${asset.id}`}>
               View Details
               <motion.span
                 className="ml-2"

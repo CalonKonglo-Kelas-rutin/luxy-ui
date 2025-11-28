@@ -16,7 +16,7 @@ import { Asset } from "@/types/asset";
 import Link from "next/link";
 import { AssetCardHover } from "@/components/ui/asset-card-hover";
 
-export default function VerificationResultPage() {
+export default function MyRequestsPage() {
   const { address } = useWallet();
   const { getUserAssets, isLoading } = useAssetRegistration();
   const [assets, setAssets] = useState<Asset[]>([]);
@@ -48,7 +48,7 @@ export default function VerificationResultPage() {
     <MainLayout
       breadcrumbs={[
         { label: "Assets", href: "/assets" },
-        { label: "My Assets", href: "/assets/verification" },
+        { label: "My Assets", href: "/assets/my-requests" },
       ]}
     >
       <div className="max-w-7xl mx-auto space-y-8 py-6">

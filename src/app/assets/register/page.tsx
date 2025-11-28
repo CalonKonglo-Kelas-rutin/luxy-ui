@@ -112,7 +112,7 @@ export default function RegisterAssetPage() {
         image: data.image,
       });
 
-      router.push("/assets/verification");
+      router.push("/assets/my-requests");
     } catch (error) {
       console.error("Registration failed:", error);
     }
