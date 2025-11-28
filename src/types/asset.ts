@@ -1,15 +1,10 @@
 export type ConditionRating = "Excellent" | "Good" | "Fair" | "Poor";
 
-export type VerificationStatus = 
-  | "draft"
-  | "pending"
-  | "in-transit"
-  | "at-pawnshop"
-  | "verifying"
-  | "appraising"
-  | "approved"
-  | "rejected"
-  | "tokenized";
+export type VerificationStatus =
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "TOKENIZED";
 
 // Asset Registration API Request
 export interface AssetRegistrationRequest {
@@ -39,7 +34,7 @@ export interface Asset {
   hasPapers: boolean;
   imageUrls: string[] | null;
   documentsUrl?: string | null;
-  status: string;
+  status: VerificationStatus;
   verificationStatus?: VerificationStatus;
   createdAt: string;
   updatedAt: string;

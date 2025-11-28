@@ -1,9 +1,9 @@
 "use client";
 
 import * as React from "react";
-import { 
-  LayoutGrid, 
-  Package, 
+import {
+  LayoutGrid,
+  Package,
   Plus,
   Clock,
   CheckCircle2,
@@ -11,7 +11,8 @@ import {
   TrendingUp,
   ShoppingBag,
   Wallet,
-  Vote
+  Vote,
+  ShieldAlert,
 } from "lucide-react";
 import { NavMain, NavBrand } from "@/components/layouts/nav";
 import {
@@ -60,13 +61,13 @@ const data = {
       icon: Plus,
     },
     {
-      title: "Asset Status",
-      url: "/assets/status",
+      title: "My Asset Requests",
+      url: "/assets/my-requests",
       icon: Clock,
     },
     {
-      title: "Verification",
-      url: "/assets/verification",
+      title: "Verify Asset",
+      url: "/assets/verify",
       icon: CheckCircle2,
     },
     {
@@ -78,6 +79,11 @@ const data = {
       title: "Governance",
       url: "/governance",
       icon: Vote,
+    },
+    {
+      title: "Admin Dashboard",
+      url: "/admin/assets",
+      icon: ShieldAlert,
     },
   ],
 };

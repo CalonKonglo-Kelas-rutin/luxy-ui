@@ -59,4 +59,40 @@ export const assetService = {
       throw new ApiError("Failed to fetch assets", undefined, error);
     }
   },
+
+  getAllRequestedAssets: async (): Promise<Asset[]> => {
+    try {
+      const response = await http.get(`/api/v1/rwa/admin/audit-list`);
+      return response.data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError("Failed to fetch assets", undefined, error);
+    }
+  },
+
+  approveAsset: async (assetId: string): Promise<Asset> => {
+    try {
+      const response = await http.post(`/api/v1/rwa/assets/${assetId}/approve`);
+      return response.data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError("Failed to approve asset", undefined, error);
+    }
+  },
+
+  rejectAsset: async (assetId: string, reason?: string): Promise<Asset> => {
+    try {
+      const response = await http.post(`/api/v1/rwa/assets/${assetId}/reject`, { reason });
+      return response.data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError("Failed to reject asset", undefined, error);
+    }
+  },
 };

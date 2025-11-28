@@ -48,6 +48,21 @@ export function useAssetRegistration() {
     }
   }, [address]);
 
+  const getAllAssets = useCallback(async (): Promise<Asset[]> => {
+    setIsLoading(true);
+
+    try {
+      const assets = await assetService.getAllRequestedAssets();
+      return assets;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch assets';
+      toast.error(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   /**
    * Get user's requested assets from backend
    */
@@ -94,5 +109,6 @@ export function useAssetRegistration() {
     registerAsset,
     getUserAssets,
     getAssetById,
+    getAllAssets,
   };
 }
