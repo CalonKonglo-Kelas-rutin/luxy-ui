@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import { useRouter } from "next/navigation";
 import { useForm, Controller } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
@@ -10,7 +10,7 @@ import { ProgressIndicator } from "@/components/ui/progress-indicator";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { CheckCircle2 } from "lucide-react";
+import { CheckCircle2, Upload, X, Image as ImageIcon } from "lucide-react";
 import { assetRegistrationSchema, AssetFormData } from "@/schemas";
 import { useAssetRegistration } from "@/hooks/use-asset-registration";
 import {
@@ -20,9 +20,11 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 
 const steps = [
   { label: "Watch Details", description: "Basic information" },
+  { label: "Upload Photo", description: "Asset image" },
   { label: "Review & Submit", description: "Confirm details" },
 ];
 
@@ -42,12 +44,15 @@ export default function RegisterAssetPage() {
   const router = useRouter();
   const { registerAsset, isSubmitting } = useAssetRegistration();
   const [currentStep, setCurrentStep] = useState(0);
+  const [imagePreview, setImagePreview] = useState<string | null>(null);
+  const [dragActive, setDragActive] = useState(false);
 
   const {
     register,
     handleSubmit,
     watch,
     control,
+    setValue,
     formState: { errors, isValid },
   } = useForm<AssetFormData>({
     resolver: zodResolver(assetRegistrationSchema),
@@ -61,11 +66,37 @@ export default function RegisterAssetPage() {
       conditionRating: "Good",
       hasBox: false,
       hasPapers: false,
-      estimatedValue: "",
+      image: null,
     },
   });
 
   const formValues = watch();
+
+  const handleDrag = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (e.type === "dragenter" || e.type === "dragover") {
+      setDragActive(true);
+    } else if (e.type === "dragleave") {
+      setDragActive(false);
+    }
+  }, []);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setDragActive(false);
+
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith("image/")) {
+      setValue("image", file);
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setImagePreview(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+    }
+  }, [setValue]);
 
   const onSubmit = async (data: AssetFormData) => {
     try {
@@ -78,9 +109,10 @@ export default function RegisterAssetPage() {
         conditionRating: data.conditionRating,
         hasBox: data.hasBox,
         hasPapers: data.hasPapers,
+        image: data.image,
       });
 
-      router.push("/assets/status");
+      router.push("/assets/verification");
     } catch (error) {
       console.error("Registration failed:", error);
     }
@@ -103,7 +135,7 @@ export default function RegisterAssetPage() {
         { label: "Register New Asset", href: "/assets/register" },
       ]}
     >
-      <div className="max-w-5xl mx-auto space-y-8 py-6">
+      <div className="w-full md:w-4xl mx-auto space-y-8 py-6">
         {/* Header */}
         <div className="text-center space-y-2">
           <h1 className="text-4xl font-bold bg-linear-to-r from-primary via-accent to-primary bg-clip-text text-transparent">
@@ -311,32 +343,112 @@ export default function RegisterAssetPage() {
                       />
                     </div>
                   </div>
-
-                  {/* Optional Fields */}
-                  <div className="pt-4 border-t">
-                    <h3 className="text-sm font-medium mb-4 text-muted-foreground">
-                      Optional Information
-                    </h3>
-                    <div className="grid gap-4">
-                      <div className="space-y-2">
-                        <Label htmlFor="estimatedValue">
-                          Estimated Value (USD)
-                        </Label>
-                        <Input
-                          id="estimatedValue"
-                          placeholder="10000"
-                          {...register("estimatedValue")}
-                        />
-                      </div>
-                    </div>
-                  </div>
                 </div>
               </div>
             </GlassCard>
           )}
 
-          {/* Step 2: Review & Submit */}
+          {/* Step 2: Upload Photo */}
           {currentStep === 1 && (
+            <GlassCard gradient hover className="p-6">
+              <div className="space-y-6">
+                <div>
+                  <h2 className="text-2xl font-semibold mb-4">
+                    Upload Asset Photo
+                  </h2>
+                  <p className="text-muted-foreground mb-6">
+                    Upload a high-quality photo of your watch
+                  </p>
+                </div>
+
+                {/* Drag & Drop Zone */}
+                {!formValues.image ? (
+                  <div
+                    onDragEnter={handleDrag}
+                    onDragLeave={handleDrag}
+                    onDragOver={handleDrag}
+                    onDrop={handleDrop}
+                    className={cn(
+                      "relative border-2 border-dashed rounded-xl p-12 transition-all duration-300 cursor-pointer group",
+                      dragActive
+                        ? "border-accent bg-accent/5 scale-[1.02]"
+                        : "border-border hover:border-accent/50 hover:bg-accent/5"
+                    )}
+                  >
+                    <input
+                      type="file"
+                      accept="image/*"
+                      onChange={(e) => {
+                        const file = e.target.files?.[0];
+                        if (file) {
+                          setValue("image", file);
+                          const reader = new FileReader();
+                          reader.onloadend = () => {
+                            setImagePreview(reader.result as string);
+                          };
+                          reader.readAsDataURL(file);
+                        }
+                      }}
+                      className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+                    />
+
+                    <div className="flex flex-col items-center justify-center text-center space-y-4">
+                      <div className="p-4 rounded-full bg-accent/10 group-hover:bg-accent/20 transition-colors">
+                        <Upload className="h-8 w-8 text-accent" />
+                      </div>
+                      <div>
+                        <p className="text-lg font-medium">
+                          Drop file here or click to browse
+                        </p>
+                        <p className="text-sm text-muted-foreground mt-1">
+                          Supports: JPG, PNG, JPEG (Max 5MB)
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    <div className="flex items-center justify-between mb-4">
+                      <h3 className="font-medium flex items-center text-success">
+                        <CheckCircle2 className="h-4 w-4 mr-2" />
+                        Image uploaded successfully
+                      </h3>
+                    </div>
+                    <div className="relative group max-w-md mx-auto">
+                      <div className="aspect-square rounded-lg overflow-hidden border bg-muted">
+                        {imagePreview && (
+                          <img
+                            src={imagePreview}
+                            alt="Asset preview"
+                            className="w-full h-full object-cover"
+                          />
+                        )}
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setValue("image", null);
+                          setImagePreview(null);
+                        }}
+                        className="absolute top-2 right-2 p-2 bg-destructive/90 hover:bg-destructive text-destructive-foreground rounded-full opacity-0 group-hover:opacity-100 transition-opacity"
+                      >
+                        <X className="h-5 w-5" />
+                      </button>
+                      <div className="mt-3 p-3 bg-muted rounded-lg">
+                        <p className="font-medium text-sm truncate">{formValues.image.name}</p>
+                        <p className="text-xs text-muted-foreground">
+                          {(formValues.image.size / 1024 / 1024).toFixed(2)} MB
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </GlassCard>
+          )}
+
+          {/* Step 3: Review & Submit */}
+          {currentStep === 2 && (
             <GlassCard gradient hover className="p-6">
               <div className="space-y-6">
                 <div>
@@ -406,6 +518,24 @@ export default function RegisterAssetPage() {
                       </div>
                     </div>
                   </div>
+
+                  {/* Image Preview */}
+                  {formValues.image && imagePreview && (
+                    <div className="flex flex-col items-center">
+                      <p className="text-sm text-muted-foreground mb-3">
+                        Uploaded Photo
+                      </p>
+                      <div className="max-w-sm">
+                        <div className="aspect-square rounded-lg overflow-hidden border">
+                          <img
+                            src={imagePreview}
+                            alt="Asset preview"
+                            className="w-full h-full object-cover"
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
 
                   {/* Next Steps Info */}
                   <div className="p-4 bg-info/10 border border-info/20 rounded-lg">
