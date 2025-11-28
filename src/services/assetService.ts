@@ -47,9 +47,9 @@ export const assetService = {
   /**
    * Get user's assets
    */
-  getUserAssets: async (ownerId: string): Promise<Asset[]> => {
+  getUserRequestedAssets: async (ownerId: string): Promise<Asset[]> => {
     try {
-      const response = await api.get(`/api/v1/rwa/owner/${ownerId}`);
+      const response = await api.get(`/api/v1/rwa/requests`, { params: { userId: ownerId } });
       return response.data;
     } catch (error) {
       const axiosError = error as AxiosError<{ message: string }>;

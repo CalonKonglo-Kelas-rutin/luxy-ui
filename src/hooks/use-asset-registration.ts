@@ -9,6 +9,7 @@ import { toast } from 'sonner';
 export function useAssetRegistration() {
   const { address } = useWallet();
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
 
   /**
    * Register asset with backend API
@@ -48,8 +49,32 @@ export function useAssetRegistration() {
     }
   }, [address]);
 
+  /**
+   * Get user's requested assets from backend
+   */
+  const getUserAssets = useCallback(async (): Promise<Asset[]> => {
+    if (!address) {
+      return [];
+    }
+
+    setIsLoading(true);
+
+    try {
+      const assets = await assetService.getUserRequestedAssets(address);
+      return assets;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch assets';
+      toast.error(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, [address]);
+
   return {
     isSubmitting,
+    isLoading,
     registerAsset,
+    getUserAssets,
   };
 }
