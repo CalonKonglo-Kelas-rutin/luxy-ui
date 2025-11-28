@@ -6,70 +6,26 @@ import { StatusBadge } from "@/components/ui/status-badge";
 import { Timeline } from "@/components/ui/timeline";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { 
-  Package, 
-  MapPin, 
-  Clock, 
+import {
+  Package,
+  Clock,
   MessageSquare,
   ArrowRight,
   Shield,
-  Search
+  Search,
+  Loader2,
+  AlertCircle
 } from "lucide-react";
 import { cn } from "@/lib/utils";
-import type { VerificationStatus, VerificationTimeline } from "@/types/asset";
-
-// Mock data
-const mockAsset = {
-  id: "AST-2024-001",
-  name: "18K Gold Rolex Submariner",
-  type: "Jewelry & Precious Metals",
-  estimatedValue: 15000,
-  status: "verifying" as VerificationStatus,
-  submittedAt: "2024-11-18T10:30:00Z",
-  trackingNumber: "TRK-8472938",
-};
-
-const timelineEvents: VerificationTimeline[] = [
-  {
-    status: "submitted",
-    timestamp: "2024-11-18 10:30 AM",
-    description: "Asset registration submitted successfully",
-    completedBy: "System",
-  },
-  {
-    status: "in-transit",
-    timestamp: "2024-11-18 02:15 PM",
-    description: "Asset picked up by logistics partner",
-    completedBy: "Swift Logistics",
-  },
-  {
-    status: "at-pawnshop",
-    timestamp: "2024-11-19 09:00 AM",
-    description: "Asset delivered to Golden Trust Pawnshop",
-    completedBy: "Swift Logistics",
-  },
-  {
-    status: "verifying",
-    timestamp: "2024-11-19 11:45 AM",
-    description: "Physical verification and authenticity check in progress",
-    completedBy: "Senior Appraiser - John Smith",
-  },
-  {
-    status: "appraising",
-    timestamp: "",
-    description: "Professional appraisal and valuation pending",
-  },
-  {
-    status: "approved",
-    timestamp: "",
-    description: "Final approval and tokenization eligibility",
-  },
-];
+import type { VerificationTimeline, Asset } from "@/types/asset";
+import { useParams } from "next/navigation";
+import { useEffect, useState } from "react";
+import { useAssetRegistration } from "@/hooks/use-asset-registration";
 
 const messages = [
   {
     id: 1,
-    from: "Golden Trust Pawnshop",
+    from: "Verification Partner",
     message: "Your asset has been received and initial inspection looks good. Full appraisal in progress.",
     timestamp: "2024-11-19 11:50 AM",
     isRead: true,
@@ -83,9 +39,103 @@ const messages = [
   },
 ];
 
-export default function AssetStatusPage() {
+export default function MyRequestDetailsPage() {
+  const params = useParams();
+  const assetId = params.id as string;
+  const { getAssetById, isLoading } = useAssetRegistration();
+  const [asset, setAsset] = useState<Asset | null>(null);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchAsset = async () => {
+      if (!assetId) return;
+
+      try {
+        setError(null);
+        const data = await getAssetById(assetId);
+        console.log("Asset data:", data);
+        setAsset(data);
+      } catch (err) {
+        console.error("Failed to fetch asset:", err);
+        setError(err instanceof Error ? err.message : "Failed to load asset details");
+      }
+    };
+
+    fetchAsset();
+  }, [assetId, getAssetById]);
+
+  // Show loading state
+  if (isLoading) {
+    return (
+      <MainLayout
+        breadcrumbs={[
+          { label: "Assets", href: "/assets" },
+          { label: "My Requests", href: "/assets/my-requests" },
+        ]}
+      >
+        <div className="flex flex-col items-center justify-center py-20">
+          <Loader2 className="h-10 w-10 animate-spin text-accent mb-4" />
+          <p className="text-muted-foreground">Loading asset details...</p>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  // Show error state
+  if (error || !asset) {
+    return (
+      <MainLayout
+        breadcrumbs={[
+          { label: "Assets", href: "/assets" },
+          { label: "My Requests", href: "/assets/my-requests" },
+        ]}
+      >
+        <GlassCard className="p-8 border-destructive/20 bg-destructive/5 text-center max-w-2xl mx-auto mt-20">
+          <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-4" />
+          <p className="text-destructive font-medium mb-2">{error || "Asset not found"}</p>
+          <Button variant="outline" onClick={() => window.location.reload()}>
+            Try Again
+          </Button>
+        </GlassCard>
+      </MainLayout>
+    );
+  }
+
+  // Helper to format date
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  };
+
+  // Static timeline with dynamic timestamps from asset data
+  const timelineEvents: VerificationTimeline[] = [
+    {
+      status: "PENDING",
+      timestamp: asset.createdAt ? formatDate(asset.createdAt) : "",
+      description: "Asset registration submitted successfully",
+      completedBy: "System",
+    },
+    {
+      status: "APPROVED",
+      timestamp: asset.approvedAt ? formatDate(asset.approvedAt) : "",
+      description: "Asset approved for tokenization",
+      completedBy: "Verification Team",
+    },
+    {
+      status: "TOKENIZED",
+      timestamp: asset.status === "TOKENIZED" ? formatDate(asset.updatedAt) : "",
+      description: "Asset successfully tokenized",
+      completedBy: "System",
+    },
+  ];
+
   const currentStepIndex = timelineEvents.findIndex(
-    (event) => event.status === mockAsset.status
+    (event) => event.status === asset.status
   );
 
   const formattedEvents = timelineEvents.map((event, index) => ({
@@ -104,24 +154,25 @@ export default function AssetStatusPage() {
         { label: "Status", href: "/assets/status" },
       ]}
     >
-      <div className="max-w-6xl mx-auto space-y-6 py-6">
+      <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 py-4 sm:py-6 px-4 sm:px-6">
         {/* Header */}
-        <div className="flex items-start justify-between">
-          <div>
-            <h1 className="text-3xl font-bold mb-2">{mockAsset.name}</h1>
-            <p className="text-muted-foreground">Asset ID: {mockAsset.id}</p>
+        <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-4">
+          <div className="flex-1 min-w-0">
+            <h1 className="text-2xl sm:text-3xl font-bold mb-2 break-words">{asset.brand} {asset.model}</h1>
+            <p className="text-sm sm:text-base text-muted-foreground break-all">Asset ID: {asset.id}</p>
+            <p className="text-sm sm:text-base text-muted-foreground break-all">Owner Address: {asset.ownerId}</p>
           </div>
-          <StatusBadge status={mockAsset.status} className="text-base px-4 py-2" />
+          <StatusBadge status={asset.status} className="text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2 shrink-0" />
         </div>
 
         {/* Asset Overview Cards */}
-        <div className="grid md:grid-cols-3 gap-4">
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 sm:gap-4">
           <GlassCard className="p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Estimated Value</p>
+                <p className="text-sm text-muted-foreground mb-1">Appraised Value</p>
                 <p className="text-2xl font-bold text-accent">
-                  ${mockAsset.estimatedValue.toLocaleString()}
+                  {asset.appraisedValueUsd ? `$${asset.appraisedValueUsd.toLocaleString()}` : 'Pending'}
                 </p>
               </div>
               <div className="p-2 rounded-lg bg-accent/10">
@@ -133,23 +184,9 @@ export default function AssetStatusPage() {
           <GlassCard className="p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Tracking Number</p>
-                <p className="text-lg font-mono font-medium">
-                  {mockAsset.trackingNumber}
-                </p>
-              </div>
-              <div className="p-2 rounded-lg bg-info/10">
-                <MapPin className="h-5 w-5 text-info" />
-              </div>
-            </div>
-          </GlassCard>
-
-          <GlassCard className="p-4">
-            <div className="flex items-start justify-between">
-              <div>
                 <p className="text-sm text-muted-foreground mb-1">Submitted</p>
                 <p className="text-lg font-medium">
-                  {new Date(mockAsset.submittedAt).toLocaleDateString()}
+                  {new Date(asset.createdAt).toLocaleDateString()}
                 </p>
               </div>
               <div className="p-2 rounded-lg bg-primary/10">
@@ -159,14 +196,57 @@ export default function AssetStatusPage() {
           </GlassCard>
         </div>
 
+        {/* Asset Details */}
+        <GlassCard className="p-6">
+          <h2 className="text-xl font-semibold mb-4">Asset Details</h2>
+          <div className="grid md:grid-cols-2 gap-4">
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Reference Number</p>
+              <p className="font-mono font-medium">{asset.refNumber}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Serial Number</p>
+              <p className="font-mono font-medium">{asset.serialNumber}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Production Year</p>
+              <p className="font-medium">{asset.productionYear}</p>
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground mb-1">Condition</p>
+              <Badge variant="outline">{asset.conditionRating}</Badge>
+            </div>
+            <div className="md:col-span-2">
+              <p className="text-sm text-muted-foreground mb-2">Accessories</p>
+              <div className="flex gap-2">
+                {asset.hasBox && (
+                  <Badge variant="secondary">Box Included</Badge>
+                )}
+                {asset.hasPapers && (
+                  <Badge variant="secondary">Papers Included</Badge>
+                )}
+                {!asset.hasBox && !asset.hasPapers && (
+                  <span className="text-sm text-muted-foreground">No accessories</span>
+                )}
+              </div>
+            </div>
+            {asset.auditorNotes && (
+              <div className="md:col-span-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
+                <p className="text-sm font-medium text-destructive mb-1">Auditor Notes:</p>
+                <p className="text-sm text-muted-foreground">{asset.auditorNotes}</p>
+              </div>
+            )}
+          </div>
+        </GlassCard>
+
         {/* Main Content Grid */}
-        <div className="grid lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
           {/* Timeline */}
-          <div className="lg:col-span-2">
-            <GlassCard gradient className="p-6">
-              <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">Verification Timeline</h2>
-                <Badge variant="outline" className="gap-1.5">
+          <div className="lg:col-span-2 order-2 lg:order-1">
+            <GlassCard gradient className="p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
+                <h2 className="text-lg sm:text-xl font-semibold">Verification Timeline</h2>
+                <Badge variant="outline" className="gap-1.5 w-fit">
                   <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
                   Live Updates
                 </Badge>
@@ -175,17 +255,15 @@ export default function AssetStatusPage() {
               <Timeline events={formattedEvents} />
 
               {/* Current Status Info */}
-              <div className="mt-8 p-4 bg-primary/5 border border-primary/20 rounded-lg">
+              <div className="mt-6 sm:mt-8 p-3 sm:p-4 bg-primary/5 border border-primary/20 rounded-lg">
                 <div className="flex items-start gap-3">
-                  <div className="p-2 rounded-lg bg-primary/10">
-                    <Search className="h-5 w-5 text-primary" />
+                  <div className="p-2 rounded-lg bg-primary/10 shrink-0">
+                    <Search className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
-                  <div className="flex-1">
-                    <h3 className="font-semibold mb-1">Current Status: Physical Verification</h3>
-                    <p className="text-sm text-muted-foreground">
-                      Our certified appraiser is conducting a thorough examination of your asset,
-                      including authenticity verification, condition assessment, and detailed
-                      documentation. This process typically takes 1-2 business days.
+                  <div className="flex-1 min-w-0">
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">Current Status: {asset.status}</h3>
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      Track your asset verification progress in real-time. You will be notified at each stage.
                     </p>
                   </div>
                 </div>
@@ -194,7 +272,7 @@ export default function AssetStatusPage() {
           </div>
 
           {/* Sidebar */}
-          <div className="space-y-6">
+          <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
             {/* Pawnshop Info */}
             <GlassCard className="p-6">
               <div className="flex items-center gap-3 mb-4">

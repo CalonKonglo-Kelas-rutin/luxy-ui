@@ -25,8 +25,8 @@ if (!projectId) {
 
 // Set up metadata
 const metadata = {
-  name: "Chain Credit",
-  description: "Chain Credit DApp",
+  name: "Luxy",
+  description: "Luxy DApp",
   url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   icons: ["https://avatars.githubusercontent.com/u/179229932"],
 };
@@ -67,7 +67,11 @@ export function Providers({
           disableTransitionOnChange
         >
           {children}
-          <Toaster />
+          <Toaster
+            position="bottom-right"
+            expand={false}
+            richColors
+          />
         </ThemeProvider>
       </QueryClientProvider>
     </WagmiProvider>

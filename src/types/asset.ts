@@ -1,52 +1,51 @@
-// Asset Types for RWA Tokenization Platform
+export type ConditionRating = "Excellent" | "Good" | "Fair" | "Poor";
 
-export type AssetType = 
-  | "jewelry"
-  | "electronics"
-  | "vehicle"
-  | "real-estate"
-  | "collectibles"
-  | "luxury-items"
-  | "other";
+export type VerificationStatus =
+  | "PENDING"
+  | "APPROVED"
+  | "REJECTED"
+  | "TOKENIZED";
 
-export type AssetCondition = "excellent" | "good" | "fair" | "poor";
+// Asset Registration API Request
+export interface AssetRegistrationRequest {
+  ownerId: string;
+  brand: string;
+  model: string;
+  refNumber: string;
+  serialNumber: string;
+  productionYear: number;
+  conditionRating: ConditionRating;
+  hasBox: boolean;
+  hasPapers: boolean;
+  image: File | null;
+}
 
-export type VerificationStatus = 
-  | "draft"
-  | "submitted"
-  | "in-transit"
-  | "at-pawnshop"
-  | "verifying"
-  | "appraising"
-  | "approved"
-  | "rejected"
-  | "tokenized";
-
-export type LoanStatus = 
-  | "active"
-  | "overdue"
-  | "paid"
-  | "defaulted";
-
+// Asset entity from backend
 export interface Asset {
-  id: string;
-  userId: string;
-  type: AssetType;
-  name: string;
-  description: string;
-  estimatedValue: number;
-  appraisedValue?: number;
-  condition: AssetCondition;
-  images: string[];
-  purchaseDate?: string;
-  purchasePrice?: number;
-  serialNumber?: string;
-  verificationStatus: VerificationStatus;
+  id: string | number;
+  ownerId: string;
+  brand: string;
+  model: string;
+  refNumber: string;
+  serialNumber: string;
+  productionYear: number;
+  conditionRating: ConditionRating;
+  hasBox: boolean;
+  hasPapers: boolean;
+  imageUrls: string[] | null;
+  documentsUrl?: string | null;
+  status: VerificationStatus;
+  verificationStatus?: VerificationStatus;
   createdAt: string;
   updatedAt: string;
   submittedAt?: string;
   approvedAt?: string;
-  tokenId?: string;
+  tokenId?: string | null;
+  appraisedValue?: number;
+  appraisedValueUsd?: number | null;
+  auditorNotes?: string | null;
+  ipfsMetadataUri?: string | null;
+  txHashMint?: string | null;
 }
 
 export interface VerificationTimeline {
@@ -55,78 +54,4 @@ export interface VerificationTimeline {
   description: string;
   completedBy?: string;
   notes?: string;
-}
-
-export interface PawnshopVerification {
-  pawnshopId: string;
-  pawnshopName: string;
-  verifierName: string;
-  verificationDate: string;
-  appraisedValue: number;
-  condition: AssetCondition;
-  notes: string;
-  photos: string[];
-  certificateUrl?: string;
-}
-
-export interface TokenizedAsset {
-  assetId: string;
-  tokenId: string;
-  tokenSymbol: string;
-  contractAddress: string;
-  chainId: number;
-  mintedAt: string;
-  totalSupply: number;
-  liquidityPoolAddress?: string;
-}
-
-export interface LoanDetails {
-  loanId: string;
-  assetId: string;
-  tokenId: string;
-  principalAmount: number;
-  interestRate: number;
-  loanTerm: number; // in days
-  disbursedAmount: number;
-  disbursedAt: string;
-  dueDate: string;
-  status: LoanStatus;
-  repaidAmount: number;
-  remainingBalance: number;
-  nextPaymentDate?: string;
-  nextPaymentAmount?: number;
-}
-
-export interface RepaymentSchedule {
-  paymentNumber: number;
-  dueDate: string;
-  amount: number;
-  principal: number;
-  interest: number;
-  status: "pending" | "paid" | "overdue";
-  paidAt?: string;
-}
-
-export interface Transaction {
-  id: string;
-  type: "disbursement" | "repayment" | "tokenization" | "liquidation";
-  amount: number;
-  currency: string;
-  timestamp: string;
-  txHash?: string;
-  status: "pending" | "confirmed" | "failed";
-  fromAddress?: string;
-  toAddress?: string;
-}
-
-export interface AssetFormData {
-  type: AssetType;
-  name: string;
-  description: string;
-  estimatedValue: number;
-  condition: AssetCondition;
-  purchaseDate?: string;
-  purchasePrice?: number;
-  serialNumber?: string;
-  images: File[];
 }
