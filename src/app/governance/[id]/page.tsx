@@ -119,7 +119,10 @@ export default function ProposalDetailPage() {
               <div className="flex items-start justify-between gap-4 mb-6">
                 <div>
                   <div className="flex items-center gap-3 mb-3">
-                    <Badge variant={proposal.status === 'ACTIVE' ? 'default' : proposal.status === 'PASSED' ? 'success' : 'secondary'}>
+                    <Badge
+                      variant={proposal.status === 'ACTIVE' ? 'default' : proposal.status === 'REJECTED' ? 'destructive' : 'outline'}
+                      className={proposal.status === 'PASSED' ? 'bg-success/10 text-success border-success/20' : ''}
+                    >
                       {proposal.status}
                     </Badge>
                     <span className="text-sm text-muted-foreground flex items-center gap-1">
