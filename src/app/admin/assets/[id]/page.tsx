@@ -17,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Label } from "@/components/ui/label";
 import { Input } from "@/components/ui/input";
 import {
-  Package,
+  Image as EmptyImage,
   CheckCircle2,
   XCircle,
   ArrowLeft,
@@ -40,6 +40,7 @@ import { useWallet } from "@/hooks/use-wallet";
 import { useTokenizeAsset } from "@/hooks/use-tokenize-asset";
 import { LISK_SEPOLIA_EXPLORER } from "@/config/contracts";
 import { Alert, AlertTitle, AlertDescription } from "@/components/ui/alert";
+import { Badge } from "@/components/ui/badge";
 
 export default function AdminAssetDetailPage() {
   const params = useParams();
@@ -550,8 +551,8 @@ export default function AdminAssetDetailPage() {
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
           {/* Left Column - Images & Key Info */}
           <div className="lg:col-span-1 space-y-6">
-            <GlassCard className="p-4 overflow-hidden">
-              <div className="aspect-square rounded-lg overflow-hidden bg-muted mb-4">
+            <GlassCard className="overflow-hidden">
+              <div className="aspect-square rounded-lg overflow-hidden bg-muted">
                 {asset.imageUrls ? (
                   <Image
                     src={`${baseUrl}${asset.imageUrls}`}
@@ -562,24 +563,9 @@ export default function AdminAssetDetailPage() {
                   />
                 ) : (
                   <div className="h-full w-full flex items-center justify-center bg-accent/10 text-accent">
-                    <Package className="h-16 w-16" />
+                    <EmptyImage className="h-16 w-16" />
                   </div>
                 )}
-              </div>
-
-              <div className="grid grid-cols-2 gap-4">
-                <div className="p-3 rounded-lg bg-accent/5 border border-accent/10">
-                  <p className="text-xs text-muted-foreground mb-1">
-                    Production Year
-                  </p>
-                  <p className="font-semibold">{asset.productionYear}</p>
-                </div>
-                <div className="p-3 rounded-lg bg-accent/5 border border-accent/10">
-                  <p className="text-xs text-muted-foreground mb-1">
-                    Condition
-                  </p>
-                  <p className="font-semibold">{asset.conditionRating}</p>
-                </div>
               </div>
             </GlassCard>
 
@@ -624,51 +610,59 @@ export default function AdminAssetDetailPage() {
           {/* Right Column - Detailed Info */}
           <div className="lg:col-span-2 space-y-6">
             <GlassCard className="p-6">
-              <h2 className="text-xl font-semibold mb-6">Asset Details</h2>
-
-              <div className="grid md:grid-cols-2 gap-6">
+              <h2 className="text-xl font-semibold mb-4">Asset Details</h2>
+              <div className="grid md:grid-cols-2 gap-4">
                 <div>
-                  <Label className="text-muted-foreground">Brand</Label>
-                  <p className="text-lg font-medium">{asset.brand}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Model</Label>
-                  <p className="text-lg font-medium">{asset.model}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mb-1">
                     Reference Number
-                  </Label>
-                  <p className="text-lg font-mono">{asset.refNumber}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Serial Number</Label>
-                  <p className="text-lg font-mono">{asset.serialNumber}</p>
-                </div>
-                <div>
-                  <Label className="text-muted-foreground">Box Included</Label>
-                  <p className="text-lg font-medium">
-                    {asset.hasBox ? "Yes" : "No"}
                   </p>
+                  <p className="font-mono font-medium">{asset.refNumber}</p>
                 </div>
                 <div>
-                  <Label className="text-muted-foreground">
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Serial Number
+                  </p>
+                  <p className="font-mono font-medium">{asset.serialNumber}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Production Year
+                  </p>
+                  <p className="font-medium">{asset.productionYear}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Condition
+                  </p>
+                  <Badge variant="outline">{asset.conditionRating}</Badge>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
+                    Box Included
+                  </p>
+                  <p className="font-medium">{asset.hasBox ? "Yes" : "No"}</p>
+                </div>
+                <div>
+                  <p className="text-sm text-muted-foreground mb-1">
                     Papers Included
-                  </Label>
-                  <p className="text-lg font-medium">
+                  </p>
+                  <p className="font-medium">
                     {asset.hasPapers ? "Yes" : "No"}
                   </p>
                 </div>
+                {asset.auditorNotes && asset.rejectedAt && (
+                  <Alert variant="destructive" className="md:col-span-2">
+                    <AlertTitle className="mb-1">Auditor Notes:</AlertTitle>
+                    <AlertDescription>{asset.auditorNotes}</AlertDescription>
+                  </Alert>
+                )}
+                {asset.auditorNotes && asset.approvedAt && (
+                  <Alert variant="default" className="md:col-span-2">
+                    <AlertTitle className="mb-1">Auditor Notes:</AlertTitle>
+                    <AlertDescription>{asset.auditorNotes}</AlertDescription>
+                  </Alert>
+                )}
               </div>
-
-              {asset.auditorNotes && (
-                <div className="mt-6 p-4 rounded-lg bg-muted/50 border">
-                  <Label className="text-muted-foreground mb-2 block">
-                    Auditor Notes
-                  </Label>
-                  <p className="text-sm">{asset.auditorNotes}</p>
-                </div>
-              )}
             </GlassCard>
 
             <GlassCard className="p-6">

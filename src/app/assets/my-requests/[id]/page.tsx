@@ -9,35 +9,20 @@ import { Badge } from "@/components/ui/badge";
 import {
   Package,
   Clock,
-  MessageSquare,
   ArrowRight,
-  Shield,
   Search,
   Loader2,
-  AlertCircle
+  AlertCircle,
+  ArrowLeft,
+  Image as EmptyImage,
 } from "lucide-react";
-import { cn } from "@/lib/utils";
 import type { VerificationTimeline, Asset } from "@/types/asset";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useAssetRegistration } from "@/hooks/use-asset-registration";
-
-const messages = [
-  {
-    id: 1,
-    from: "Verification Partner",
-    message: "Your asset has been received and initial inspection looks good. Full appraisal in progress.",
-    timestamp: "2024-11-19 11:50 AM",
-    isRead: true,
-  },
-  {
-    id: 2,
-    from: "System",
-    message: "Reminder: You can track your asset status in real-time on this page.",
-    timestamp: "2024-11-19 10:00 AM",
-    isRead: true,
-  },
-];
+import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
+import Link from "next/link";
+import Image from "next/image";
 
 export default function MyRequestDetailsPage() {
   const params = useParams();
@@ -45,6 +30,8 @@ export default function MyRequestDetailsPage() {
   const { getAssetById, isLoading } = useAssetRegistration();
   const [asset, setAsset] = useState<Asset | null>(null);
   const [error, setError] = useState<string | null>(null);
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   useEffect(() => {
     const fetchAsset = async () => {
@@ -57,7 +44,9 @@ export default function MyRequestDetailsPage() {
         setAsset(data);
       } catch (err) {
         console.error("Failed to fetch asset:", err);
-        setError(err instanceof Error ? err.message : "Failed to load asset details");
+        setError(
+          err instanceof Error ? err.message : "Failed to load asset details"
+        );
       }
     };
 
@@ -73,7 +62,7 @@ export default function MyRequestDetailsPage() {
           { label: "My Requests", href: "/assets/my-requests" },
         ]}
       >
-        <div className="flex flex-col items-center justify-center py-20">
+        <div className="flex flex-col min-h-screen items-center justify-center py-20">
           <Loader2 className="h-10 w-10 animate-spin text-accent mb-4" />
           <p className="text-muted-foreground">Loading asset details...</p>
         </div>
@@ -92,7 +81,9 @@ export default function MyRequestDetailsPage() {
       >
         <GlassCard className="p-8 border-destructive/20 bg-destructive/5 text-center max-w-2xl mx-auto mt-20">
           <AlertCircle className="h-10 w-10 text-destructive mx-auto mb-4" />
-          <p className="text-destructive font-medium mb-2">{error || "Asset not found"}</p>
+          <p className="text-destructive font-medium mb-2">
+            {error || "Asset not found"}
+          </p>
           <Button variant="outline" onClick={() => window.location.reload()}>
             Try Again
           </Button>
@@ -103,12 +94,12 @@ export default function MyRequestDetailsPage() {
 
   // Helper to format date
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleString('en-US', {
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    return new Date(dateString).toLocaleString("en-US", {
+      month: "short",
+      day: "numeric",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     });
   };
 
@@ -126,12 +117,6 @@ export default function MyRequestDetailsPage() {
       description: "Asset approved for tokenization",
       completedBy: "Verification Team",
     },
-    {
-      status: "TOKENIZED",
-      timestamp: asset.status === "TOKENIZED" ? formatDate(asset.updatedAt) : "",
-      description: "Asset successfully tokenized",
-      completedBy: "System",
-    },
   ];
 
   const currentStepIndex = timelineEvents.findIndex(
@@ -142,7 +127,9 @@ export default function MyRequestDetailsPage() {
     status: event.status,
     label: event.description,
     timestamp: event.timestamp,
-    description: event.completedBy ? `Completed by: ${event.completedBy}` : undefined,
+    description: event.completedBy
+      ? `Completed by: ${event.completedBy}`
+      : undefined,
     isCompleted: index < currentStepIndex,
     isCurrent: index === currentStepIndex,
   }));
@@ -157,12 +144,27 @@ export default function MyRequestDetailsPage() {
       <div className="max-w-6xl mx-auto space-y-4 sm:space-y-6 py-4 sm:py-6 px-4 sm:px-6">
         {/* Header */}
         <div className="flex flex-col sm:flex-row items-start sm:items-start justify-between gap-4">
-          <div className="flex-1 min-w-0">
-            <h1 className="text-2xl sm:text-3xl font-bold mb-2 break-words">{asset.brand} {asset.model}</h1>
-            <p className="text-sm sm:text-base text-muted-foreground break-all">Asset ID: {asset.id}</p>
-            <p className="text-sm sm:text-base text-muted-foreground break-all">Owner Address: {asset.ownerId}</p>
+          <div className="flex items-start gap-4">
+            <Button asChild variant="ghost" size="icon" className="mt-1">
+              <Link href="/admin/assets">
+                <ArrowLeft className="h-5 w-5" />
+              </Link>
+            </Button>
+            <div>
+              <h1 className="text-3xl font-bold">
+                {asset.brand} {asset.model}
+              </h1>
+              <div className="flex items-center gap-2 mt-1 text-muted-foreground">
+                <span className="font-mono text-sm">
+                  Owner: {asset.ownerId}
+                </span>
+              </div>
+            </div>
           </div>
-          <StatusBadge status={asset.status} className="text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2 shrink-0" />
+          <StatusBadge
+            status={asset.status}
+            className="text-sm sm:text-base px-3 sm:px-4 py-1.5 sm:py-2 shrink-0"
+          />
         </div>
 
         {/* Asset Overview Cards */}
@@ -170,9 +172,13 @@ export default function MyRequestDetailsPage() {
           <GlassCard className="p-4">
             <div className="flex items-start justify-between">
               <div>
-                <p className="text-sm text-muted-foreground mb-1">Appraised Value</p>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Appraised Value
+                </p>
                 <p className="text-2xl font-bold text-accent">
-                  {asset.appraisedValueUsd ? `$${asset.appraisedValueUsd.toLocaleString()}` : 'Pending'}
+                  {asset.appraisedValueUsd
+                    ? `$${asset.appraisedValueUsd.toLocaleString()}`
+                    : "Pending"}
                 </p>
               </div>
               <div className="p-2 rounded-lg bg-accent/10">
@@ -196,48 +202,77 @@ export default function MyRequestDetailsPage() {
           </GlassCard>
         </div>
 
-        {/* Asset Details */}
-        <GlassCard className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Asset Details</h2>
-          <div className="grid md:grid-cols-2 gap-4">
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Reference Number</p>
-              <p className="font-mono font-medium">{asset.refNumber}</p>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <GlassCard className=" overflow-hidden">
+            <div className="aspect-square rounded-lg overflow-hidden bg-muted">
+              {asset.imageUrls ? (
+                <Image
+                  src={`${baseUrl}${asset.imageUrls}`}
+                  alt={asset.model}
+                  className="h-full w-full object-cover"
+                  width={400}
+                  height={400}
+                />
+              ) : (
+                <div className="h-full w-full flex items-center justify-center bg-accent/10 text-accent">
+                  <EmptyImage className="h-16 w-16" />
+                </div>
+              )}
             </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Serial Number</p>
-              <p className="font-mono font-medium">{asset.serialNumber}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Production Year</p>
-              <p className="font-medium">{asset.productionYear}</p>
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground mb-1">Condition</p>
-              <Badge variant="outline">{asset.conditionRating}</Badge>
-            </div>
-            <div className="md:col-span-2">
-              <p className="text-sm text-muted-foreground mb-2">Accessories</p>
-              <div className="flex gap-2">
-                {asset.hasBox && (
-                  <Badge variant="secondary">Box Included</Badge>
-                )}
-                {asset.hasPapers && (
-                  <Badge variant="secondary">Papers Included</Badge>
-                )}
-                {!asset.hasBox && !asset.hasPapers && (
-                  <span className="text-sm text-muted-foreground">No accessories</span>
-                )}
+          </GlassCard>
+          {/* Asset Details */}
+          <GlassCard className="col-span-2 p-6">
+            <h2 className="text-xl font-semibold mb-4">Asset Details</h2>
+            <div className="grid md:grid-cols-2 gap-4">
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Reference Number
+                </p>
+                <p className="font-mono font-medium">{asset.refNumber}</p>
               </div>
-            </div>
-            {asset.auditorNotes && (
-              <div className="md:col-span-2 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-                <p className="text-sm font-medium text-destructive mb-1">Auditor Notes:</p>
-                <p className="text-sm text-muted-foreground">{asset.auditorNotes}</p>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Serial Number
+                </p>
+                <p className="font-mono font-medium">{asset.serialNumber}</p>
               </div>
-            )}
-          </div>
-        </GlassCard>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Production Year
+                </p>
+                <p className="font-medium">{asset.productionYear}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">Condition</p>
+                <Badge variant="outline">{asset.conditionRating}</Badge>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Box Included
+                </p>
+                <p className="font-medium">{asset.hasBox ? "Yes" : "No"}</p>
+              </div>
+              <div>
+                <p className="text-sm text-muted-foreground mb-1">
+                  Papers Included
+                </p>
+                <p className="font-medium">{asset.hasPapers ? "Yes" : "No"}</p>
+              </div>
+              {asset.auditorNotes && asset.rejectedAt && (
+                <Alert variant="destructive" className="md:col-span-2">
+                  <AlertTitle className="mb-1">Auditor Notes:</AlertTitle>
+                  <AlertDescription>{asset.auditorNotes}</AlertDescription>
+                </Alert>
+              )}
+              {asset.auditorNotes && asset.approvedAt && (
+                <Alert variant="default" className="md:col-span-2">
+                  <AlertTitle className="mb-1">Auditor Notes:</AlertTitle>
+                  <AlertDescription>{asset.auditorNotes}</AlertDescription>
+                </Alert>
+              )}
+            </div>
+          </GlassCard>
+        </div>
 
         {/* Main Content Grid */}
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
@@ -245,7 +280,9 @@ export default function MyRequestDetailsPage() {
           <div className="lg:col-span-2 order-2 lg:order-1">
             <GlassCard gradient className="p-4 sm:p-6">
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0 mb-4 sm:mb-6">
-                <h2 className="text-lg sm:text-xl font-semibold">Verification Timeline</h2>
+                <h2 className="text-lg sm:text-xl font-semibold">
+                  Verification Timeline
+                </h2>
                 <Badge variant="outline" className="gap-1.5 w-fit">
                   <div className="h-2 w-2 rounded-full bg-accent animate-pulse" />
                   Live Updates
@@ -261,9 +298,12 @@ export default function MyRequestDetailsPage() {
                     <Search className="h-4 w-4 sm:h-5 sm:w-5 text-primary" />
                   </div>
                   <div className="flex-1 min-w-0">
-                    <h3 className="font-semibold mb-1 text-sm sm:text-base">Current Status: {asset.status}</h3>
+                    <h3 className="font-semibold mb-1 text-sm sm:text-base">
+                      Current Status: {asset.status}
+                    </h3>
                     <p className="text-xs sm:text-sm text-muted-foreground">
-                      Track your asset verification progress in real-time. You will be notified at each stage.
+                      Track your asset verification progress in real-time. You
+                      will be notified at each stage.
                     </p>
                   </div>
                 </div>
@@ -273,76 +313,6 @@ export default function MyRequestDetailsPage() {
 
           {/* Sidebar */}
           <div className="space-y-4 sm:space-y-6 order-1 lg:order-2">
-            {/* Pawnshop Info */}
-            <GlassCard className="p-6">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-success/10">
-                  <Shield className="h-5 w-5 text-success" />
-                </div>
-                <div>
-                  <h3 className="font-semibold">Partner Pawnshop</h3>
-                  <p className="text-sm text-muted-foreground">Verified & Trusted</p>
-                </div>
-              </div>
-
-              <div className="space-y-3 text-sm">
-                <div>
-                  <p className="text-muted-foreground">Name</p>
-                  <p className="font-medium">Golden Trust Pawnshop</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">Location</p>
-                  <p className="font-medium">Manhattan, NY</p>
-                </div>
-                <div>
-                  <p className="text-muted-foreground">License</p>
-                  <p className="font-mono text-xs">LIC-NY-8472</p>
-                </div>
-              </div>
-
-              <Button variant="outline" className="w-full mt-4" size="sm">
-                View Credentials
-              </Button>
-            </GlassCard>
-
-            {/* Messages */}
-            <GlassCard className="p-6">
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="font-semibold">Updates & Messages</h3>
-                <Badge variant="secondary">{messages.length}</Badge>
-              </div>
-
-              <div className="space-y-3">
-                {messages.map((msg) => (
-                  <div
-                    key={msg.id}
-                    className={cn(
-                      "p-3 rounded-lg border transition-colors cursor-pointer",
-                      msg.isRead
-                        ? "bg-muted/30 border-border"
-                        : "bg-accent/5 border-accent/20"
-                    )}
-                  >
-                    <div className="flex items-center justify-between mb-1">
-                      <p className="text-sm font-medium">{msg.from}</p>
-                      {!msg.isRead && (
-                        <div className="h-2 w-2 rounded-full bg-accent" />
-                      )}
-                    </div>
-                    <p className="text-xs text-muted-foreground mb-2">
-                      {msg.message}
-                    </p>
-                    <p className="text-xs text-muted-foreground">{msg.timestamp}</p>
-                  </div>
-                ))}
-              </div>
-
-              <Button variant="ghost" className="w-full mt-4 gap-2" size="sm">
-                <MessageSquare className="h-4 w-4" />
-                View All Messages
-              </Button>
-            </GlassCard>
-
             {/* Next Steps */}
             <GlassCard className="p-6 bg-linear-to-br from-accent/10 to-primary/5">
               <h3 className="font-semibold mb-3">What Happens Next?</h3>
@@ -377,9 +347,7 @@ export default function MyRequestDetailsPage() {
                 You will be notified when the next stage begins
               </p>
             </div>
-            <Button variant="outline">
-              Need Help?
-            </Button>
+            <Button variant="outline">Need Help?</Button>
           </div>
         </GlassCard>
       </div>

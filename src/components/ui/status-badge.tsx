@@ -43,12 +43,6 @@ const verificationStatusConfig: Record<
     icon: XCircle,
     className: "bg-destructive/10 text-destructive dark:text-white border-destructive/20",
   },
-  TOKENIZED: {
-    label: "Tokenized",
-    variant: "default",
-    icon: CheckCircle2,
-    className: "bg-accent/10 text-accent border-accent/20",
-  },
 };
 
 

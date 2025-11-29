@@ -5,9 +5,10 @@ import { AnimatePresence, motion } from "motion/react";
 import { useState } from "react";
 import { Asset } from "@/types/asset";
 import { Badge } from "@/components/ui/badge";
+import { StatusBadge } from "@/components/ui/status-badge";
 import { Button } from "@/components/ui/button";
 import Link from "next/link";
-import { CheckCircle2, Clock, XCircle, Package, MoveRight } from "lucide-react";
+import { MoveRight } from "lucide-react";
 
 interface AssetCardHoverProps {
   assets: Asset[];
@@ -16,38 +17,6 @@ interface AssetCardHoverProps {
 
 export const AssetCardHover = ({ assets, className }: AssetCardHoverProps) => {
   const [hoveredIndex, setHoveredIndex] = useState<number | null>(null);
-
-  const getStatusColor = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "approved":
-      case "tokenized":
-        return "success";
-      case "rejected":
-        return "destructive";
-      case "pending":
-      case "submitted":
-      case "verifying":
-        return "warning";
-      default:
-        return "default";
-    }
-  };
-
-  const getStatusIcon = (status: string) => {
-    switch (status.toLowerCase()) {
-      case "approved":
-      case "tokenized":
-        return <CheckCircle2 className="h-4 w-4" />;
-      case "rejected":
-        return <XCircle className="h-4 w-4" />;
-      case "pending":
-      case "submitted":
-      case "verifying":
-        return <Clock className="h-4 w-4" />;
-      default:
-        return <Package className="h-4 w-4" />;
-    }
-  };
 
   return (
     <div
@@ -81,7 +50,7 @@ export const AssetCardHover = ({ assets, className }: AssetCardHoverProps) => {
             )}
           </AnimatePresence>
 
-          <AssetCard asset={asset} getStatusColor={getStatusColor} getStatusIcon={getStatusIcon} />
+          <AssetCard asset={asset} />
         </div>
       ))}
     </div>
@@ -90,11 +59,9 @@ export const AssetCardHover = ({ assets, className }: AssetCardHoverProps) => {
 
 interface AssetCardProps {
   asset: Asset;
-  getStatusColor: (status: string) => string;
-  getStatusIcon: (status: string) => React.ReactNode;
 }
 
-const AssetCard = ({ asset, getStatusColor, getStatusIcon }: AssetCardProps) => {
+const AssetCard = ({ asset }: AssetCardProps) => {
   return (
     <div className="rounded-2xl h-full w-full overflow-hidden bg-card/80 backdrop-blur-xl border border-border/50 group-hover:border-accent/50 relative z-20 transition-all duration-300">
       {/* Status indicator bar */}
@@ -102,10 +69,9 @@ const AssetCard = ({ asset, getStatusColor, getStatusIcon }: AssetCardProps) => 
         <motion.div
           className={cn(
             "h-full",
-            getStatusColor(asset.status) === "success" && "bg-green-500",
-            getStatusColor(asset.status) === "warning" && "bg-yellow-500",
-            getStatusColor(asset.status) === "destructive" && "bg-red-500",
-            getStatusColor(asset.status) === "default" && "bg-gray-500"
+            asset.status === "APPROVED" && "bg-green-500",
+            asset.status === "PENDING" && "bg-yellow-500",
+            asset.status === "REJECTED" && "bg-red-500"
           )}
           initial={{ width: "0%" }}
           animate={{ width: "100%" }}
@@ -122,13 +88,7 @@ const AssetCard = ({ asset, getStatusColor, getStatusIcon }: AssetCardProps) => 
             </h3>
             <p className="text-sm text-muted-foreground mt-1">{asset.model}</p>
           </div>
-          <Badge
-            variant={getStatusColor(asset.status) as any}
-            className="flex items-center gap-1.5 ml-2"
-          >
-            {getStatusIcon(asset.status)}
-            {asset.status}
-          </Badge>
+          <StatusBadge status={asset.status} className="ml-2" />
         </div>
 
         {/* Asset details */}
@@ -164,7 +124,7 @@ const AssetCard = ({ asset, getStatusColor, getStatusIcon }: AssetCardProps) => 
           {asset.appraisedValueUsd && (
             <div className="flex justify-between items-center py-2 border-b border-border/30">
               <span className="text-muted-foreground">Appraised Value</span>
-              <span className="text-foreground font-bold text-accent">
+              <span className="font-bold text-accent">
                 ${asset.appraisedValueUsd.toLocaleString()}
               </span>
             </div>
@@ -191,14 +151,14 @@ const AssetCard = ({ asset, getStatusColor, getStatusIcon }: AssetCardProps) => 
             )}
           </div>
         </div>
-        
-        {/* Auditor notes if rejected */}
+
+        {/* Auditor notes */}
         {asset.auditorNotes && (
-          <div className="mt-4 p-3 rounded-lg bg-destructive/10 border border-destructive/20">
-            <p className="text-xs text-destructive font-medium mb-1">
-              Auditor Notes:
+          <div className="mt-4 p-3 rounded-lg bg-accent-foreground border border-accent/30">
+            <p className="text-xs font-medium mb-1">Auditor Notes:</p>
+            <p className="text-xs text-muted-foreground">
+              {asset.auditorNotes}
             </p>
-            <p className="text-xs text-muted-foreground">{asset.auditorNotes}</p>
           </div>
         )}
 

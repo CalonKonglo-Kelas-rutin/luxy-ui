@@ -99,7 +99,7 @@ export default function MyRequestsPage() {
             </div>
             <h3 className="text-xl font-semibold mb-2">No Assets Found</h3>
             <p className="text-muted-foreground mb-6 max-w-md mx-auto">
-              You haven't registered any assets yet. Start by registering your luxury watch to unlock liquidity.
+              You have not registered any assets for tokenization yet. Start by
             </p>
             <Button asChild>
               <Link href="/assets/register">Register Your First Asset</Link>
