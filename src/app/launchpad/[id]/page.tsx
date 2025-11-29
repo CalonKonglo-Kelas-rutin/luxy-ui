@@ -16,26 +16,107 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { toast } from "sonner";
-import { allTokenizedAsset } from "../data";
+import { PriceChart } from "@/components/ui/price-chart";
+import { pricingService } from "@/services/pricingService";
+import { assetService } from "@/services/assetService";
+import { Pricing } from "@/types/pricing";
+import { Asset } from "@/types/asset";
+import { Skeleton } from "@/components/ui/skeleton";
 
 export default function tokenizedAssetDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
 
-  const tokenizedAsset = allTokenizedAsset.find((o) => o.id === id);
-
+  const [asset, setAsset] = useState<Asset | null>(null);
+  const [currentPrice, setCurrentPrice] = useState<Pricing | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
   const [isProcessing, setIsProcessing] = useState(false);
+  const [pricingData, setPricingData] = useState<Pricing[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
 
-  if (!tokenizedAsset) {
+  useEffect(() => {
+    const fetchData = async () => {
+      if (!id) return;
+      setIsLoading(true);
+      setError(null);
+      try {
+        const assetData = await assetService.getAssetById(id);
+        setAsset(assetData);
+
+        const dummyProductId = '21370'; // Product pricing currently not implemented 
+
+        const [priceData, chartData] = await Promise.all([
+          pricingService.getProductPricing(dummyProductId),
+          pricingService.getProductPricingChart(dummyProductId)
+        ]);
+
+        setCurrentPrice(priceData);
+        setPricingData(chartData);
+      } catch (err) {
+        console.error("Failed to fetch data:", err);
+        setError("Failed to load asset data");
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    fetchData();
+  }, [id]);
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+
+  // Map Asset to UI model
+  const tokenizedAsset = asset ? {
+    id: asset.id.toString(),
+    assetName: `${asset.brand} ${asset.model}`,
+    brand: asset.brand,
+    model: asset.model,
+    year: asset.productionYear,
+    condition: asset.conditionRating,
+    totalUnits: 1000, // Mock: Total tokens
+    pricePerUnit: currentPrice?.price || 0,
+    soldUnits: 0, // Mock
+    availableUnits: 1000, // Mock
+    soldPercentage: 0, // Mock
+    rentalYieldApy: 12.5, // Mock
+    totalValue: asset.appraisedValueUsd || 0,
+    investors: 0,
+    status: asset.status === 'APPROVED' ? 'active' : 'upcoming',
+    authenticityVerified: asset.status === 'APPROVED',
+    images: `${baseUrl}/${asset.imageUrls}`,
+    documents: asset.documentsUrl ? [{ title: "Verification Document", url: asset.documentsUrl }] : [],
+  } : null;
+
+  if (isLoading) {
+    return (
+      <MainLayout>
+        <div className="container mx-auto px-4 py-8 space-y-8">
+          <div className="space-y-4">
+            <Skeleton className="h-8 w-32" />
+            <div className="grid lg:grid-cols-3 gap-8">
+              <div className="lg:col-span-2 space-y-6">
+                <Skeleton className="aspect-video rounded-2xl" />
+                <Skeleton className="h-64 rounded-xl" />
+              </div>
+              <div className="lg:col-span-1">
+                <Skeleton className="h-96 rounded-xl" />
+              </div>
+            </div>
+          </div>
+        </div>
+      </MainLayout>
+    );
+  }
+
+  if (error || !tokenizedAsset) {
     return (
       <MainLayout>
         <div className="flex flex-col items-center justify-center min-h-[50vh]">
-          <h1 className="text-2xl font-bold mb-4">tokenizedAsset Not Found</h1>
-          <Button onClick={() => router.push("/launchpad")}>
+          <h1 className="text-2xl font-bold mb-4">{error || "Asset Not Found"}</h1>
+          <Button variant="ghost" onClick={() => router.push("/launchpad")}>
             Back to Launchpad
           </Button>
         </div>
@@ -88,7 +169,7 @@ export default function tokenizedAssetDetailPage() {
             {/* Hero Image */}
             <div className="relative aspect-video rounded-2xl overflow-hidden border bg-muted">
               <img
-                src="https://www.luxurybazaar.com/grey-market/wp-content/uploads/2024/11/Yellow-Gold-Rolex-GMT-Master-II-126718GRNR-1024x683.jpg"
+                src={tokenizedAsset.images || "https://placehold.co/800x600?text=No+Image"}
                 alt={tokenizedAsset.assetName}
                 className="w-full h-full object-cover"
               />
@@ -98,15 +179,15 @@ export default function tokenizedAssetDetailPage() {
                     tokenizedAsset.status === "active"
                       ? "default"
                       : tokenizedAsset.status === "upcoming"
-                      ? "secondary"
-                      : "outline"
+                        ? "secondary"
+                        : "outline"
                   }
                 >
                   {tokenizedAsset.status === "active"
-                    ? "Active tokenizedAsset"
+                    ? "Active Asset"
                     : tokenizedAsset.status === "upcoming"
-                    ? "Coming Soon"
-                    : "Sold Out"}
+                      ? "Coming Soon"
+                      : "Sold Out"}
                 </Badge>
                 {tokenizedAsset.authenticityVerified && (
                   <Badge variant="outline" className="bg-background/50 backdrop-blur-md border-success/50 text-success">
@@ -137,16 +218,6 @@ export default function tokenizedAssetDetailPage() {
                   <span className="font-medium text-foreground">Condition:</span>
                   {tokenizedAsset.condition}
                 </div>
-              </div>
-
-              <Separator className="my-6" />
-
-              <div className="space-y-4">
-                <h3 className="text-lg font-semibold">Description</h3>
-                <p className="text-muted-foreground leading-relaxed">
-                  {tokenizedAsset.description ||
-                    "No description available for this asset."}
-                </p>
               </div>
 
               <Separator className="my-6" />
@@ -191,7 +262,7 @@ export default function tokenizedAssetDetailPage() {
                   </p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold">
-                      ${tokenizedAsset.pricePerUnit}
+                      ${tokenizedAsset.pricePerUnit.toLocaleString()}
                     </span>
                     <span className="text-sm text-muted-foreground">
                       / token
@@ -362,6 +433,12 @@ export default function tokenizedAssetDetailPage() {
             </div>
           </div>
         </div>
+
+        <PriceChart
+          data={pricingData}
+          isLoading={isLoading}
+          error={error}
+        />
       </div>
     </MainLayout>
   );
