@@ -13,6 +13,7 @@ import {
   Download,
   Shield,
   Wallet,
+  ArrowRightLeft
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
@@ -26,7 +27,7 @@ import { Skeleton } from "@/components/ui/skeleton";
 
 import { useOrder } from "@/hooks/use-order";
 
-export default function tokenizedAssetDetailPage() {
+export default function MarketplaceAssetDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
@@ -34,7 +35,7 @@ export default function tokenizedAssetDetailPage() {
   const [asset, setAsset] = useState<Asset | null>(null);
   const [currentPrice, setCurrentPrice] = useState<Pricing | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
-  const orderType = "BUY"; // Fixed to BUY for Launchpad
+  const [orderType, setOrderType] = useState<"BUY" | "SELL">("BUY");
   const [pricingData, setPricingData] = useState<Pricing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -87,8 +88,8 @@ export default function tokenizedAssetDetailPage() {
     rentalYieldApy: 12.5, // Mock
     totalValue: asset.appraisedValueUsd || 0,
     investors: 0,
-    status: asset.status === 'APPROVED' ? 'active' : 'upcoming',
-    authenticityVerified: asset.status === 'APPROVED',
+    status: asset.status === 'TOKENIZED' ? 'active' : 'upcoming', // In marketplace, active means tokenized
+    authenticityVerified: true,
     images: `${baseUrl}/${asset.imageUrls}`,
     documents: asset.documentsUrl ? [{ title: "Verification Document", url: asset.documentsUrl }] : [],
   } : null;
@@ -119,8 +120,8 @@ export default function tokenizedAssetDetailPage() {
       <MainLayout>
         <div className="flex flex-col items-center justify-center min-h-[50vh]">
           <h1 className="text-2xl font-bold mb-4">{error || "Asset Not Found"}</h1>
-          <Button onClick={() => router.push("/launchpad")}>
-            Back to Launchpad
+          <Button onClick={() => router.push("/marketplace")}>
+            Back to Marketplace
           </Button>
         </div>
       </MainLayout>
@@ -150,8 +151,8 @@ export default function tokenizedAssetDetailPage() {
     <MainLayout
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Launchpad", href: "/launchpad" },
-        { label: tokenizedAsset.assetName, href: `/launchpad/${id}` },
+        { label: "Marketplace", href: "/marketplace" },
+        { label: tokenizedAsset.assetName, href: `/marketplace/${id}` },
       ]}
     >
       <div className="space-y-6 my-6">
@@ -161,9 +162,9 @@ export default function tokenizedAssetDetailPage() {
           className="pl-0 hover:pl-2 transition-all"
           asChild
         >
-          <Link href="/launchpad">
+          <Link href="/marketplace">
             <ArrowLeft className="mr-2 h-4 w-4" />
-            Back to Launchpad
+            Back to Marketplace
           </Link>
         </Button>
 
@@ -179,19 +180,9 @@ export default function tokenizedAssetDetailPage() {
               />
               <div className="absolute top-4 left-4 flex gap-2">
                 <Badge
-                  variant={
-                    tokenizedAsset.status === "active"
-                      ? "default"
-                      : tokenizedAsset.status === "upcoming"
-                        ? "secondary"
-                        : "outline"
-                  }
+                  variant="secondary"
                 >
-                  {tokenizedAsset.status === "active"
-                    ? "Active Asset"
-                    : tokenizedAsset.status === "upcoming"
-                      ? "Coming Soon"
-                      : "Sold Out"}
+                  Tokenized Asset
                 </Badge>
                 {tokenizedAsset.authenticityVerified && (
                   <Badge variant="outline" className="bg-background/50 backdrop-blur-md border-success/50 text-success">
@@ -259,10 +250,10 @@ export default function tokenizedAssetDetailPage() {
           {/* Right Column - Booking Card */}
           <div className="lg:col-span-1">
             <div className="sticky top-24 space-y-6">
-              <GlassCard className="p-6 border-accent/20 shadow-lg shadow-accent/5">
+              <GlassCard className="p-6 border-primary/20 shadow-lg shadow-primary/5">
                 <div className="mb-6">
                   <p className="text-sm text-muted-foreground mb-1">
-                    Current Price
+                    Market Price
                   </p>
                   <div className="flex items-baseline gap-2">
                     <span className="text-3xl font-bold">
@@ -275,142 +266,137 @@ export default function tokenizedAssetDetailPage() {
                 </div>
 
                 {/* Purchase Form */}
-                {tokenizedAsset.status === "active" ? (
-                  <div className="space-y-4">
-                    {/* Buy Only for Launchpad */}
-                    <div className="p-1 bg-muted rounded-lg text-center mb-4">
-                      <span className="text-sm font-medium">Initial Offering (Buy Only)</span>
-                    </div>
-
-                    <div className="space-y-2">
-                      <label className="text-sm font-medium">Quantity</label>
-                      <div className="flex items-center gap-3">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() =>
-                            setQuantity(Math.max(1, quantity - 1))
-                          }
-                          disabled={quantity <= 1}
-                        >
-                          -
-                        </Button>
-                        <Input
-                          type="number"
-                          min={1}
-                          max={maxQuantity}
-                          value={quantity}
-                          onChange={(e) =>
-                            setQuantity(
-                              Math.min(
-                                maxQuantity,
-                                Math.max(1, parseInt(e.target.value) || 1)
-                              )
-                            )
-                          }
-                          className="text-center font-mono"
-                        />
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() =>
-                            setQuantity(Math.min(maxQuantity, quantity + 1))
-                          }
-                          disabled={quantity >= maxQuantity}
-                        >
-                          +
-                        </Button>
-                      </div>
-                      <div className="flex justify-between text-xs text-muted-foreground px-1">
-                        <span>Min: 1</span>
-                        <span>Max: {maxQuantity}</span>
-                      </div>
-                    </div>
-
-                    <div className="p-4 rounded-lg bg-muted/50 space-y-2">
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Subtotal</span>
-                        <span className="font-medium">
-                          ${totalCost.toLocaleString()}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Fee (0.5%)</span>
-                        <span className="font-medium">
-                          ${(totalCost * 0.005).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </span>
-                      </div>
-                      <Separator className="my-2" />
-                      <div className="flex justify-between text-sm font-semibold">
-                        <span>
-                          Total to Pay
-                        </span>
-                        <span>
-                          $
-                          {(totalCost * 1.005).toLocaleString(undefined, {
-                            minimumFractionDigits: 2,
-                            maximumFractionDigits: 2,
-                          })}
-                        </span>
-                      </div>
-                      <div className="flex justify-between text-sm pt-2">
-                        <span className="text-muted-foreground">
-                          Est. APY Yield
-                        </span>
-                        <span className="font-medium text-success">
-                          {tokenizedAsset.rentalYieldApy}%
-                        </span>
-                      </div>
-                    </div>
-
-                    <Button
-                      className="w-full h-12 text-lg"
-                      onClick={handleOrder}
-                      disabled={isSubmitting}
+                <div className="space-y-4">
+                  {/* Buy / Sell Toggle */}
+                  <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg">
+                    <button
+                      onClick={() => setOrderType("BUY")}
+                      className={`py-2 text-sm font-medium rounded-md transition-all ${orderType === "BUY"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                        }`}
                     >
-                      {isSubmitting ? (
-                        <>Processing...</>
-                      ) : (
-                        <>
-                          <Wallet className="mr-2 h-5 w-5" />
-                          Buy Tokens
-                        </>
-                      )}
-                    </Button>
-                    <p className="text-xs text-center text-muted-foreground">
-                      By purchasing, you agree to the Terms of Service.
-                    </p>
+                      Buy
+                    </button>
+                    <button
+                      onClick={() => setOrderType("SELL")}
+                      className={`py-2 text-sm font-medium rounded-md transition-all ${orderType === "SELL"
+                        ? "bg-background text-foreground shadow-sm"
+                        : "text-muted-foreground hover:text-foreground"
+                        }`}
+                    >
+                      Sell
+                    </button>
                   </div>
-                ) : (
-                  <div className="p-6 rounded-lg bg-muted/30 text-center space-y-3">
-                    {tokenizedAsset.status === "upcoming" ? (
-                      <>
-                        <Clock className="w-10 h-10 text-muted-foreground mx-auto" />
-                        <h3 className="font-semibold">Coming Soon</h3>
-                        <p className="text-sm text-muted-foreground">
-                          This tokenizedAsset will be available for investment soon.
-                        </p>
-                        <Button variant="outline" className="w-full">
-                          Notify Me
-                        </Button>
-                      </>
+
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Quantity</label>
+                    <div className="flex items-center gap-3">
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() =>
+                          setQuantity(Math.max(1, quantity - 1))
+                        }
+                        disabled={quantity <= 1}
+                      >
+                        -
+                      </Button>
+                      <Input
+                        type="number"
+                        min={1}
+                        max={maxQuantity}
+                        value={quantity}
+                        onChange={(e) =>
+                          setQuantity(
+                            Math.min(
+                              maxQuantity,
+                              Math.max(1, parseInt(e.target.value) || 1)
+                            )
+                          )
+                        }
+                        className="text-center font-mono"
+                      />
+                      <Button
+                        variant="outline"
+                        size="icon"
+                        onClick={() =>
+                          setQuantity(Math.min(maxQuantity, quantity + 1))
+                        }
+                        disabled={quantity >= maxQuantity}
+                      >
+                        +
+                      </Button>
+                    </div>
+                    <div className="flex justify-between text-xs text-muted-foreground px-1">
+                      <span>Min: 1</span>
+                      <span>Max: {maxQuantity}</span>
+                    </div>
+                  </div>
+
+                  <div className="p-4 rounded-lg bg-muted/50 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Subtotal</span>
+                      <span className="font-medium">
+                        ${totalCost.toLocaleString()}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">Fee (0.5%)</span>
+                      <span className="font-medium">
+                        ${(totalCost * 0.005).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                    <Separator className="my-2" />
+                    <div className="flex justify-between text-sm font-semibold">
+                      <span>
+                        {orderType === "BUY" ? "Total to Pay" : "Total to Receive"}
+                      </span>
+                      <span>
+                        $
+                        {(orderType === "BUY"
+                          ? totalCost * 1.005
+                          : totalCost * 0.995
+                        ).toLocaleString(undefined, {
+                          minimumFractionDigits: 2,
+                          maximumFractionDigits: 2,
+                        })}
+                      </span>
+                    </div>
+                    <div className="flex justify-between text-sm pt-2">
+                      <span className="text-muted-foreground">
+                        Est. APY Yield
+                      </span>
+                      <span className="font-medium text-success">
+                        {tokenizedAsset.rentalYieldApy}%
+                      </span>
+                    </div>
+                  </div>
+
+                  <Button
+                    className={`w-full h-12 text-lg ${orderType === "SELL"
+                      ? "bg-destructive hover:bg-destructive/90"
+                      : ""
+                      }`}
+                    onClick={handleOrder}
+                    disabled={isSubmitting}
+                  >
+                    {isSubmitting ? (
+                      <>Processing...</>
                     ) : (
                       <>
-                        <CheckCircle2 className="w-10 h-10 text-muted-foreground mx-auto" />
-                        <h3 className="font-semibold">Sold Out</h3>
-                        <p className="text-sm text-muted-foreground">
-                          This tokenizedAsset has been fully subscribed.
-                        </p>
-                        <Button variant="outline" className="w-full">
-                          View Secondary Market
-                        </Button>
+                        <ArrowRightLeft className="mr-2 h-5 w-5" />
+                        {orderType === "BUY" ? "Buy Tokens" : "Sell Tokens"}
                       </>
                     )}
-                  </div>
-                )}
+                  </Button>
+                  <p className="text-xs text-center text-muted-foreground">
+                    By trading, you agree to the Terms of Service.
+                  </p>
+                </div>
               </GlassCard>
 
               {/* Investment Highlights */}

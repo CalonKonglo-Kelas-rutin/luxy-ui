@@ -3,17 +3,15 @@
 import * as React from "react";
 import {
   LayoutGrid,
-  Package,
   Plus,
   Clock,
-  CheckCircle2,
   Watch,
-  TrendingUp,
   ShoppingBag,
   Wallet,
   Vote,
   ShieldAlert,
 } from "lucide-react";
+import { useAccount } from "wagmi";
 import { NavMain, NavBrand } from "@/components/layouts/nav";
 import {
   Sidebar,
@@ -51,11 +49,6 @@ const data = {
       icon: ShoppingBag,
     },
     {
-      title: "Rental Earnings",
-      url: "/earnings",
-      icon: TrendingUp,
-    },
-    {
       title: "Tokenize Watch",
       url: "/assets/register",
       icon: Plus,
@@ -64,16 +57,6 @@ const data = {
       title: "My Asset Requests",
       url: "/assets/my-requests",
       icon: Clock,
-    },
-    {
-      title: "Verify Asset",
-      url: "/assets/verify",
-      icon: CheckCircle2,
-    },
-    {
-      title: "Redeem",
-      url: "/redeem",
-      icon: Package,
     },
     {
       title: "Governance",
@@ -89,13 +72,28 @@ const data = {
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { address } = useAccount();
+  const ADMIN_ADDRESS = process.env.ADMIN_ADDRESS;
+
+  const filteredNavMain = data.navMain.filter((item) => {
+    const isAdmin = address?.toLowerCase() === ADMIN_ADDRESS?.toLowerCase();
+
+    if (isAdmin) {
+      // Admin sees ONLY Admin Dashboard
+      return item.title === "Admin Dashboard";
+    } else {
+      // Non-admin sees everything EXCEPT Admin Dashboard
+      return item.title !== "Admin Dashboard";
+    }
+  });
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <NavBrand />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={filteredNavMain} />
       </SidebarContent>
       <SidebarRail />
     </Sidebar>

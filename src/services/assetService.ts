@@ -46,6 +46,21 @@ export const assetService = {
   },
 
   /**
+   * Get all assets
+   */
+  getAllAssets: async (): Promise<Asset[]> => {
+    try {
+      const response = await http.get("/api/v1/rwa/assets");
+      return response.data;
+    } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
+      throw new ApiError("Failed to get all assets", undefined, error);
+    }
+  },
+
+  /**
    * Get user's assets
    */
   getUserRequestedAssets: async (ownerId: string): Promise<Asset[]> => {

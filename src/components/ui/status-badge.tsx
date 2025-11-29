@@ -35,13 +35,19 @@ const verificationStatusConfig: Record<
     label: "Approved",
     variant: "default",
     icon: CheckCircle2,
-    className: "bg-success/10 text-success dark:text-white border-success/20",
+    className: "bg-success/10 text-success border-success/20",
   },
   REJECTED: {
     label: "Rejected",
     variant: "destructive",
     icon: XCircle,
-    className: "bg-destructive/10 text-destructive dark:text-white border-destructive/20",
+    className: "bg-destructive/10 text-destructive border-destructive/20",
+  },
+  TOKENIZED: {
+    label: "Tokenized",
+    variant: "default",
+    icon: CheckCircle2,
+    className: "bg-success/10 text-success border-success/20",
   },
 };
 

@@ -1,10 +1,11 @@
 'use client';
 
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
 import { CONTRACTS, LISK_SEPOLIA_CHAIN_ID } from '@/config/contracts';
-import { Asset } from '@/types/asset';
+import { Asset, TokenizedAsset } from '@/types';
 import { toast } from 'sonner';
+import { tokenizedAssetService } from '@/services/tokenizedAssetService';
 
 /**
  * Generate a simple symbol from the asset name
@@ -18,7 +19,7 @@ function generateSymbol(name: string): string {
     .join('')
     .toUpperCase()
     .slice(0, 5);
-  
+
   return symbol || 'TKN';
 }
 
@@ -32,7 +33,8 @@ function generateTokenName(brand: string, model: string): string {
 
 export function useTokenizeAsset() {
   const [tokenId, setTokenId] = useState<string | null>(null);
-  
+  const [isLoading, setIsLoading] = useState<boolean>(false);
+
   const {
     data: hash,
     writeContract,
@@ -107,8 +109,25 @@ export function useTokenizeAsset() {
     }
   };
 
+  const getAllTokenizedAssets = useCallback(async (): Promise<TokenizedAsset[]> => {
+    setIsLoading(true);
+
+    try {
+      const assets = await tokenizedAssetService.getAllTokenizedAsset();
+      return assets;
+    } catch (err) {
+      const errorMessage = err instanceof Error ? err.message : 'Failed to fetch assets';
+      toast.error(errorMessage);
+      throw err;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   return {
     tokenizeAsset,
+    getAllTokenizedAssets,
+    isLoading,
     txHash: hash,
     tokenId,
     isWritePending,

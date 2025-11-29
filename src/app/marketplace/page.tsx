@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layouts/main-layout";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Shield, Clock, Sparkles, SearchIcon, Loader2 } from "lucide-react";
+import { Shield, SearchIcon, Loader2, ArrowRightLeft } from "lucide-react";
 import Link from "next/link";
 import {
   InputGroup,
@@ -16,15 +16,15 @@ import { useTokenizeAsset } from "@/hooks/use-tokenize-asset";
 import { TokenizedAsset } from "@/types";
 import { useEffect, useState } from "react";
 
-export default function LaunchpadPage() {
+export default function MarketplacePage() {
   const { getAllTokenizedAssets, isLoading } = useTokenizeAsset();
   const [assets, setAssets] = useState<TokenizedAsset[]>([]);
 
   useEffect(() => {
     getAllTokenizedAssets().then((data) => {
-      // Filter for APPROVED assets (Launchpad)
-      const approvedAssets = data.filter(asset => asset.status === 'APPROVED');
-      setAssets(approvedAssets);
+      // Filter for TOKENIZED assets (Secondary Market)
+      const tokenizedAssets = data.filter(asset => asset.status === 'TOKENIZED');
+      setAssets(tokenizedAssets);
     });
   }, [getAllTokenizedAssets]);
 
@@ -33,27 +33,25 @@ export default function LaunchpadPage() {
     <MainLayout
       breadcrumbs={[
         { label: "Dashboard", href: "/" },
-        { label: "Launchpad", href: "/launchpad" },
+        { label: "Marketplace", href: "/marketplace" },
       ]}
     >
       <div className="space-y-6 my-6">
         {/* Hero Section */}
         <div className="relative overflow-hidden rounded-2xl border bg-card">
-          <div className="absolute inset-0 bg-linear-to-br from-accent/10 via-primary/5 to-transparent" />
-          <div className="absolute top-0 right-0 w-96 h-96 bg-accent/5 rounded-full blur-3xl" />
+          <div className="absolute inset-0 bg-linear-to-br from-primary/10 via-accent/5 to-transparent" />
+          <div className="absolute top-0 right-0 w-96 h-96 bg-primary/5 rounded-full blur-3xl" />
 
           <div className="relative p-8">
             <div className="max-w-3xl">
               <div className="flex items-center gap-2 mb-3">
-                <Sparkles className="h-6 w-6 text-accent" />
+                <ArrowRightLeft className="h-6 w-6 text-primary" />
                 <h1 className="text-4xl font-bold bg-linear-to-r from-foreground to-foreground/70 bg-clip-text">
-                  Watch Launchpad
+                  Secondary Market
                 </h1>
               </div>
               <p className="text-lg text-muted-foreground mb-6">
-                Discover fractional investment opportunities in luxury
-                timepieces. Own shares, earn rental yields, and trade on
-                secondary markets.
+                Trade tokenized luxury watches with other investors. Buy and sell fractional ownership in a liquid marketplace.
               </p>
             </div>
           </div>
@@ -61,26 +59,26 @@ export default function LaunchpadPage() {
 
         {/* Filters & Search */}
         <InputGroup>
-          <InputGroupInput placeholder="Search by brand, model, or offering ID..." />
+          <InputGroupInput placeholder="Search by brand, model, or token ID..." />
           <InputGroupAddon>
             <SearchIcon className="h-4 w-4 text-muted-foreground" />
           </InputGroupAddon>
         </InputGroup>
 
-        {/* All Offerings */}
+        {/* All Listings */}
         <div>
-          <h2 className="text-2xl font-semibold mb-4">All Offerings</h2>
+          <h2 className="text-2xl font-semibold mb-4">Market Listings</h2>
           {isLoading ? (
             <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="h-10 w-10 animate-spin text-accent mb-4" />
-              <p className="text-muted-foreground">Loading assets...</p>
+              <Loader2 className="h-10 w-10 animate-spin text-primary mb-4" />
+              <p className="text-muted-foreground">Loading marketplace...</p>
             </div>
           ) : (
             <div className="grid md:grid-cols-3 gap-4">
               {assets.map((asset) => (
                 <GlassCard
                   key={asset.id}
-                  className="overflow-hidden group cursor-pointer hover:border-accent/50 transition-all"
+                  className="overflow-hidden group cursor-pointer hover:border-primary/50 transition-all"
                 >
                   {/* Compact Image */}
                   <div className="relative h-48 overflow-hidden">
@@ -96,9 +94,9 @@ export default function LaunchpadPage() {
                     </Badge>
                     <Badge
                       className="absolute top-3 right-3 text-xs z-10"
-                      variant="default"
+                      variant="secondary"
                     >
-                      Active
+                      Tokenized
                     </Badge>
                   </div>
 
@@ -112,13 +110,13 @@ export default function LaunchpadPage() {
                     {/* Compact Stats */}
                     <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
                       <div>
-                        <p className="text-muted-foreground mb-0.5">Price/Unit</p>
-                        <p className="font-semibold">${asset.price}</p>
+                        <p className="text-muted-foreground mb-0.5">Market Price</p>
+                        <p className="font-semibold">${asset.price.toLocaleString()}</p>
                       </div>
                       <div>
-                        <p className="text-muted-foreground mb-0.5">APY</p>
-                        <p className="font-semibold text-success">
-                          12.5%
+                        <p className="text-muted-foreground mb-0.5">24h Vol</p>
+                        <p className="font-semibold text-foreground">
+                          $12.5k
                         </p>
                       </div>
                     </div>
@@ -129,8 +127,8 @@ export default function LaunchpadPage() {
                       className="w-full"
                       asChild
                     >
-                      <Link href={`/launchpad/${asset.id}`}>
-                        View Details
+                      <Link href={`/marketplace/${asset.id}`}>
+                        Trade Now
                       </Link>
                     </Button>
                   </div>
@@ -138,53 +136,12 @@ export default function LaunchpadPage() {
               ))}
               {assets.length === 0 && (
                 <div className="col-span-3 text-center py-12 text-muted-foreground">
-                  No approved assets found in Launchpad.
+                  No tokenized assets found in the marketplace.
                 </div>
               )}
             </div>
           )}
         </div>
-
-        {/* Info Banner */}
-        <GlassCard className="p-6 bg-linear-to-br from-primary/5 to-accent/5">
-          <div className="flex items-start gap-4">
-            <div className="p-3 rounded-lg bg-accent/10 shrink-0">
-              <Shield className="h-6 w-6 text-accent" />
-            </div>
-            <div className="flex-1">
-              <h3 className="font-semibold mb-2">How It Works</h3>
-              <div className="grid md:grid-cols-3 gap-4 text-sm text-muted-foreground">
-                <div>
-                  <p className="font-medium text-foreground mb-1">
-                    1. Browse & Invest
-                  </p>
-                  <p>
-                    Choose from verified luxury watch offerings and purchase
-                    fractional units.
-                  </p>
-                </div>
-                <div>
-                  <p className="font-medium text-foreground mb-1">
-                    2. Earn Yields
-                  </p>
-                  <p>
-                    Receive rental income from watch rentals proportional to
-                    your ownership.
-                  </p>
-                </div>
-                <div>
-                  <p className="font-medium text-foreground mb-1">
-                    3. Trade or Redeem
-                  </p>
-                  <p>
-                    Sell units on secondary market or redeem physical watch at
-                    100% ownership.
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </GlassCard>
       </div>
     </MainLayout>
   );
