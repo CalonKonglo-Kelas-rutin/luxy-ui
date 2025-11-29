@@ -7,6 +7,8 @@ import { mainnet, liskSepolia } from "@reown/appkit/networks";
 import { type ReactNode } from "react";
 import { cookieToInitialState, WagmiProvider, type Config } from "wagmi";
 import { Toaster } from "@/components/ui/sonner";
+import { WalletRedirectProvider } from "./wallet-redirect-provider";
+
 import { ThemeProvider } from "./theme-provider";
 
 // Set up queryClient with optimized defaults
@@ -25,8 +27,8 @@ if (!projectId) {
 
 // Set up metadata
 const metadata = {
-  name: "Chain Credit",
-  description: "Chain Credit DApp",
+  name: "Luxy",
+  description: "Luxy DApp",
   url: process.env.NEXT_PUBLIC_APP_URL || "http://localhost:3000",
   icons: ["https://avatars.githubusercontent.com/u/179229932"],
 };
@@ -66,8 +68,14 @@ export function Providers({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster />
+          <WalletRedirectProvider>
+            {children}
+            <Toaster
+              position="bottom-right"
+              expand={false}
+              richColors
+            />
+          </WalletRedirectProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </WagmiProvider>

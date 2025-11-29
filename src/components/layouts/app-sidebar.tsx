@@ -1,15 +1,17 @@
 "use client";
 
 import * as React from "react";
-import { 
-  LayoutGrid, 
-  Package, 
-  Wallet, 
-  CreditCard,
+import {
+  LayoutGrid,
   Plus,
   Clock,
-  CheckCircle2
+  Watch,
+  ShoppingBag,
+  Wallet,
+  Vote,
+  ShieldAlert,
 } from "lucide-react";
+import { useAccount } from "wagmi";
 import { NavMain, NavBrand } from "@/components/layouts/nav";
 import {
   Sidebar,
@@ -18,7 +20,7 @@ import {
   SidebarRail,
 } from "@/components/ui/sidebar";
 
-// Navigation data for RWA Platform
+// Navigation data for HoroloFi - Fractional Watch Ownership Platform
 const data = {
   user: {
     name: "shadcn",
@@ -32,46 +34,66 @@ const data = {
       icon: LayoutGrid,
     },
     {
-      title: "Register Asset",
+      title: "Launchpad",
+      url: "/launchpad",
+      icon: Watch,
+    },
+    {
+      title: "My Portfolio",
+      url: "/portfolio",
+      icon: Wallet,
+    },
+    {
+      title: "Secondary Market",
+      url: "/marketplace",
+      icon: ShoppingBag,
+    },
+    {
+      title: "Tokenize Watch",
       url: "/assets/register",
       icon: Plus,
     },
     {
-      title: "Asset Status",
-      url: "/assets/status",
+      title: "My Asset Requests",
+      url: "/assets/my-requests",
       icon: Clock,
     },
     {
-      title: "Verification",
-      url: "/assets/verification",
-      icon: CheckCircle2,
+      title: "Governance",
+      url: "/governance",
+      icon: Vote,
     },
     {
-      title: "Tokenize",
-      url: "/assets/tokenize",
-      icon: Package,
-    },
-    {
-      title: "Wallet",
-      url: "/wallet",
-      icon: Wallet,
-    },
-    {
-      title: "Repayment",
-      url: "/repayment",
-      icon: CreditCard,
+      title: "Admin Dashboard",
+      url: "/admin/assets",
+      icon: ShieldAlert,
     },
   ],
 };
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
+  const { address } = useAccount();
+  const ADMIN_ADDRESS = process.env.ADMIN_ADDRESS;
+
+  const filteredNavMain = data.navMain.filter((item) => {
+    const isAdmin = address?.toLowerCase() === ADMIN_ADDRESS?.toLowerCase();
+
+    if (isAdmin) {
+      // Admin sees ONLY Admin Dashboard
+      return item.title === "Admin Dashboard";
+    } else {
+      // Non-admin sees everything EXCEPT Admin Dashboard
+      return item.title !== "Admin Dashboard";
+    }
+  });
+
   return (
     <Sidebar collapsible="icon" {...props}>
       <SidebarHeader>
         <NavBrand />
       </SidebarHeader>
       <SidebarContent>
-        <NavMain items={data.navMain} />
+        <NavMain items={filteredNavMain} />
       </SidebarContent>
       <SidebarRail />
     </Sidebar>
