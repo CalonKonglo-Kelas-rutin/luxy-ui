@@ -7,6 +7,8 @@ import { mainnet, liskSepolia } from "@reown/appkit/networks";
 import { type ReactNode } from "react";
 import { cookieToInitialState, WagmiProvider, type Config } from "wagmi";
 import { Toaster } from "@/components/ui/sonner";
+import { WalletRedirectProvider } from "./wallet-redirect-provider";
+
 import { ThemeProvider } from "./theme-provider";
 
 // Set up queryClient with optimized defaults
@@ -66,12 +68,14 @@ export function Providers({
           enableSystem
           disableTransitionOnChange
         >
-          {children}
-          <Toaster
-            position="bottom-right"
-            expand={false}
-            richColors
-          />
+          <WalletRedirectProvider>
+            {children}
+            <Toaster
+              position="bottom-right"
+              expand={false}
+              richColors
+            />
+          </WalletRedirectProvider>
         </ThemeProvider>
       </QueryClientProvider>
     </WagmiProvider>

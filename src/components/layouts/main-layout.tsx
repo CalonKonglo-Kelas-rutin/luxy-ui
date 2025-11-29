@@ -6,7 +6,9 @@ import {
   SidebarInset,
   SidebarProvider,
 } from "@/components/ui/sidebar";
-import { ReactNode } from "react";
+import { ReactNode, useEffect } from "react";
+import { useAccount } from "wagmi";
+import { usePathname, useRouter } from "next/navigation";
 
 interface MainLayoutProps {
   children: ReactNode;
@@ -16,7 +18,22 @@ interface MainLayoutProps {
   }[];
 }
 
+const ADMIN_ADDRESS = "0xE6E3bAF4E19E56E8339B2d7008eea70eC0ab1566";
+
 export function MainLayout({ children, breadcrumbs }: MainLayoutProps) {
+  const { address } = useAccount();
+  const router = useRouter();
+  const pathname = usePathname();
+
+  useEffect(() => {
+    if (address?.toLowerCase() === ADMIN_ADDRESS.toLowerCase()) {
+      // If admin is on a non-admin path, redirect to admin dashboard
+      if (!pathname.startsWith("/admin")) {
+        router.push("/admin/assets");
+      }
+    }
+  }, [address, pathname, router]);
+
   return (
     <SidebarProvider>
       <AppSidebar />

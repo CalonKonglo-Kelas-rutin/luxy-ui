@@ -7,4 +7,5 @@ export interface TokenizedAsset {
   model: string;
   imageUrls: string;
   price: number;
+  status: string;
 }

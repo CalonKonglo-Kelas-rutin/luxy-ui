@@ -6,10 +6,12 @@ import {
   ChevronsUpDown,
   LogOut,
   Wallet,
+  Copy,
 } from "lucide-react"
 import { useAccount, useDisconnect } from 'wagmi'
 import { useAppKit } from "@reown/appkit/react"
 import { Button } from "@/components/ui/button"
+import { toast } from "sonner"
 
 import {
   Avatar,
@@ -72,13 +74,16 @@ export function NavUser() {
           </DropdownMenuLabel>
           <DropdownMenuSeparator />
           <DropdownMenuGroup>
+            <DropdownMenuItem onClick={() => {
+              navigator.clipboard.writeText(address);
+              toast.success("Address copied to clipboard");
+            }}>
+              <Copy />
+              Copy Address
+            </DropdownMenuItem>
             <DropdownMenuItem>
               <BadgeCheck />
               Account
-            </DropdownMenuItem>
-            <DropdownMenuItem>
-              <Bell />
-              Notifications
             </DropdownMenuItem>
           </DropdownMenuGroup>
           <DropdownMenuSeparator />
@@ -93,7 +98,7 @@ export function NavUser() {
 
   // If not connected, show custom sign in button
   return (
-    <Button 
+    <Button
       variant="default"
       className="gap-2"
       onClick={() => open()}

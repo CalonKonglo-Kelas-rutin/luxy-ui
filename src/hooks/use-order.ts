@@ -3,7 +3,7 @@
 import { useState, useCallback } from 'react';
 import { useSignTypedData, useAccount, useChainId } from 'wagmi';
 import { orderService } from '@/services/orderService';
-import { OrderPayload, Order } from '@/types/order';
+import { OrderPayload, Order, OrderMatch } from '@/types/order';
 import { toast } from 'sonner';
 
 // EIP-712 Domain
@@ -23,7 +23,7 @@ const types = {
     { name: 'quantity', type: 'uint256' },
     { name: 'price', type: 'uint256' },
     { name: 'orderType', type: 'string' },
-    { name: 'expiry', type: 'uint256' },
+    { name: 'expiryData', type: 'uint256' },
     { name: 'nonce', type: 'uint256' },
   ],
 } as const;
@@ -39,7 +39,7 @@ export function useOrder() {
     quantity: number,
     price: number,
     orderType: "BUY" | "SELL"
-  ): Promise<Order> => {
+  ): Promise<void> => {
     if (!address) {
       toast.error('Please connect your wallet first');
       throw new Error('Wallet not connected');
@@ -48,11 +48,11 @@ export function useOrder() {
     setIsSubmitting(true);
 
     try {
-      const expiry = Math.floor(Date.now() / 1000) + 3600; // 1 hour expiry
+      const expiryData = Math.floor(Date.now() / 1000) + 3600; // 1 hour expiryData
       const nonce = Math.floor(Math.random() * 1000000); // Random nonce for now
 
       // 1. Sign the order
-      const signature = await signTypedDataAsync({
+      const signatureData = await signTypedDataAsync({
         domain: {
           ...domain,
           chainId,
@@ -65,7 +65,7 @@ export function useOrder() {
           quantity: BigInt(quantity), // Wagmi expects BigInt for uint256
           price: BigInt(price * 100), // Assuming 2 decimals for price, adjust as needed
           orderType,
-          expiry: BigInt(expiry),
+          expiryData: BigInt(expiryData),
           nonce: BigInt(nonce),
         },
       });
@@ -77,19 +77,29 @@ export function useOrder() {
         quantity,
         price,
         orderType,
-        signature,
-        expiry,
+        signatureData,
+        expiryData,
         nonce,
       };
 
-      // 3. Submit to backend
-      const result = await orderService.createOrder(payload);
+      // 3. Try to match order first
+      console.log("Attempting to match order...");
+      const matchResult = await orderService.getMatchOrder(payload);
+      console.log("Match result:", matchResult);
 
-      toast.success('Order placed successfully!');
-      return result;
+      if (matchResult.status === 'MATCHED') {
+        toast.success('Order matched successfully!');
+        return;
+      }
+
+      // 4. If no match, create order in order book
+      console.log("No match found, creating order...");
+      await orderService.createOrder(payload);
+      toast.success('Order placed successfully! Your order status: Pending');
+
     } catch (err) {
-      console.error('Order creation failed:', err);
-      const errorMessage = err instanceof Error ? err.message : 'Failed to place order';
+      console.error('Order processing failed:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to process order';
       toast.error(errorMessage);
       throw err;
     } finally {
@@ -97,8 +107,23 @@ export function useOrder() {
     }
   }, [address, chainId, signTypedDataAsync]);
 
+  const matchOrder = useCallback(async (
+    orderData: OrderPayload
+  ): Promise<OrderMatch> => {
+    try {
+      const result = await orderService.getMatchOrder(orderData);
+      return result;
+    } catch (err) {
+      console.error('Order matching failed:', err);
+      const errorMessage = err instanceof Error ? err.message : 'Failed to match order';
+      toast.error(errorMessage);
+      throw err;
+    }
+  }, []);
+
   return {
     createOrder,
     isSubmitting,
+    matchOrder,
   };
 }

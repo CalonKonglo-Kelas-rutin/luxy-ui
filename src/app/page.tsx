@@ -1,3 +1,5 @@
+"use client";
+
 import { MainLayout } from "@/components/layouts/main-layout";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Button } from "@/components/ui/button";
@@ -15,6 +17,11 @@ import {
   ArrowRight,
 } from "lucide-react";
 import Link from "next/link";
+import { useWallet } from "@/hooks/use-wallet";
+import { Spotlight } from "@/components/ui/spotlight-new";
+import { useAppKit } from "@reown/appkit/react";
+import { HoverBorderGradient } from "@/components/ui/hover-border-gradient";
+import { motion } from "motion/react";
 
 // Mock data for fractional ownership dashboard
 const stats = {
@@ -98,6 +105,44 @@ const recentActivity = [
 ];
 
 export default function Page() {
+  const { isConnected } = useWallet();
+  const { open } = useAppKit();
+
+  if (!isConnected) {
+    return (
+      <div className="h-screen w-full rounded-md flex md:items-center md:justify-center bg-black/[0.96] antialiased bg-grid-white/[0.02] relative overflow-hidden">
+        <Spotlight />
+        <div className=" p-4 max-w-7xl  mx-auto relative z-10  w-full pt-20 md:pt-0">
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.8, ease: "easeOut" }}
+          >
+            <h1 className="text-4xl md:text-7xl font-bold text-center bg-clip-text text-transparent bg-gradient-to-b from-neutral-50 to-neutral-400 bg-opacity-50">
+              Welcome to <br /> Luxy.
+            </h1>
+            <p className="mt-4 font-normal text-base text-neutral-300 max-w-lg text-center mx-auto">
+              The premier marketplace for fractional ownership of luxury timepieces.
+              Invest, trade, and earn yields on the world's most exclusive watches.
+            </p>
+
+            <div className="mt-8 flex justify-center">
+              <HoverBorderGradient
+                containerClassName="rounded-full"
+                as="button"
+                className="dark:bg-black bg-white text-black dark:text-white flex items-center space-x-2 cursor-pointer"
+                onClick={() => open()}
+              >
+                <Wallet className="h-5 w-5 mr-4" />
+                Connect Wallet
+              </HoverBorderGradient>
+            </div>
+          </motion.div>
+        </div>
+      </div>
+    );
+  }
+
   return (
     <MainLayout breadcrumbs={[{ label: "Dashboard", href: "/" }]}>
       <div className="space-y-6 my-6">
@@ -112,7 +157,7 @@ export default function Page() {
                 Welcome to Luxy
               </h1>
               <p className="text-lg text-muted-foreground mb-6">
-                Own fractions of luxury watches and earn rental yields
+                Own fractions of luxury watches and earn yields
               </p>
               <div className="flex gap-3">
                 <Button
@@ -212,139 +257,86 @@ export default function Page() {
 
         {/* Main Content Grid */}
         <div className="grid lg:grid-cols-3 gap-6">
-          {/* My Ownership */}
+          {/* Portfolio Summary */}
           <div className="lg:col-span-2">
             <GlassCard gradient className="p-6">
               <div className="flex items-center justify-between mb-6">
-                <h2 className="text-xl font-semibold">My Ownership</h2>
+                <h2 className="text-xl font-semibold">Portfolio</h2>
                 <Button variant="ghost" size="sm" asChild>
-                  <Link href="/launchpad">
-                    <Plus className="h-4 w-4 mr-2" />
-                    Invest More
+                  <Link href="/portfolio">
+                    View Full Portfolio <ArrowRight className="ml-2 h-4 w-4" />
                   </Link>
                 </Button>
               </div>
 
-              <div className="space-y-4">
-                {myOwnerships.map((ownership) => (
-                  <div
-                    key={ownership.id}
-                    className="p-4 rounded-lg border bg-card/50 hover:border-accent/50 transition-colors cursor-pointer"
-                  >
-                    <div className="flex gap-4">
-                      {/* Watch Image */}
-                      <div className="w-24 h-24 rounded-lg overflow-hidden bg-muted shrink-0">
-                        <div className="w-full h-full bg-linear-to-br from-accent/10 to-primary/10 flex items-center justify-center">
-                          <Watch className="h-8 w-8 text-muted-foreground" />
-                        </div>
-                      </div>
-
-                      {/* Details */}
-                      <div className="flex-1">
-                        <div className="flex items-start justify-between mb-2">
-                          <div>
-                            <h3 className="font-semibold">
-                              {ownership.assetName}
-                            </h3>
-                            <p className="text-sm text-muted-foreground">
-                              {ownership.brand}
-                            </p>
-                          </div>
-                          <Badge variant="outline" className="gap-1">
-                            <Users className="h-3 w-3" />
-                            {ownership.ownershipPercentage}%
-                          </Badge>
-                        </div>
-
-                        <div className="grid grid-cols-4 gap-3 mb-3 text-xs">
-                          <div>
-                            <p className="text-muted-foreground mb-0.5">
-                              Units Owned
-                            </p>
-                            <p className="font-semibold">
-                              {ownership.unitsOwned}/{ownership.totalUnits}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground mb-0.5">
-                              Current Value
-                            </p>
-                            <p className="font-semibold text-accent">
-                              ${ownership.currentValue.toLocaleString()}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground mb-0.5">
-                              Unrealized P/L
-                            </p>
-                            <p
-                              className={`font-semibold ${
-                                ownership.unrealizedGain >= 0
-                                  ? "text-success"
-                                  : "text-destructive"
-                              }`}
-                            >
-                              {ownership.unrealizedGain >= 0 ? "+" : ""}$
-                              {ownership.unrealizedGain.toLocaleString()}
-                            </p>
-                          </div>
-                          <div>
-                            <p className="text-muted-foreground mb-0.5">
-                              Claimable
-                            </p>
-                            <p className="font-semibold text-success">
-                              ${ownership.claimableYield}
-                            </p>
-                          </div>
-                        </div>
-
-                        <div className="flex items-center justify-between">
-                          <Badge variant="secondary" className="text-xs">
-                            APY: {ownership.apy}%
-                          </Badge>
-                          <div className="flex gap-2">
-                            <Button
-                              size="sm"
-                              variant="outline"
-                              className="h-7 text-xs"
-                            >
-                              Details
-                            </Button>
-                            {ownership.claimableYield > 0 && (
-                              <Button
-                                size="sm"
-                                className="h-7 text-xs bg-success hover:bg-success/90"
-                              >
-                                Claim ${ownership.claimableYield}
-                              </Button>
-                            )}
-                          </div>
-                        </div>
-                      </div>
+              <div className="grid gap-4 md:grid-cols-2">
+                <div className="p-4 rounded-lg border bg-card/50">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-primary/10">
+                      <Package className="h-5 w-5 text-primary" />
                     </div>
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Total Assets
+                    </span>
                   </div>
-                ))}
+                  <div className="text-2xl font-bold">{stats.totalInvestments}</div>
+                </div>
 
-                {myOwnerships.length === 0 && (
-                  <div className="text-center py-12">
-                    <div className="inline-flex p-4 rounded-full bg-muted/50 mb-4">
-                      <Watch className="h-8 w-8 text-muted-foreground" />
+                <div className="p-4 rounded-lg border bg-card/50">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="p-2 rounded-lg bg-success/10">
+                      <TrendingUp className="h-5 w-5 text-success" />
                     </div>
-                    <h3 className="font-semibold mb-2">No Investments Yet</h3>
-                    <p className="text-sm text-muted-foreground mb-4">
-                      Start by exploring watch offerings in the launchpad
-                    </p>
-                    <Button
-                      className="bg-accent hover:bg-accent/90 gap-2"
-                      asChild
+                    <span className="text-sm font-medium text-muted-foreground">
+                      Total Yield
+                    </span>
+                  </div>
+                  <div className="text-2xl font-bold text-success">
+                    ${stats.totalYieldEarned.toLocaleString()}
+                  </div>
+                </div>
+              </div>
+
+              <div className="mt-6">
+                <h3 className="text-sm font-medium text-muted-foreground mb-4">
+                  Top Holdings
+                </h3>
+                <div className="space-y-3">
+                  {myOwnerships.slice(0, 3).map((ownership) => (
+                    <div
+                      key={ownership.id}
+                      className="flex items-center justify-between p-3 rounded-lg bg-muted/50"
                     >
-                      <Link href="/launchpad">
-                        <Watch className="h-4 w-4" />
-                        Explore Offerings
-                      </Link>
-                    </Button>
-                  </div>
-                )}
+                      <div className="flex items-center gap-3">
+                        <div className="h-10 w-10 rounded-md bg-background flex items-center justify-center">
+                          <Watch className="h-5 w-5 text-muted-foreground" />
+                        </div>
+                        <div>
+                          <p className="font-medium text-sm">
+                            {ownership.assetName}
+                          </p>
+                          <p className="text-xs text-muted-foreground">
+                            {ownership.brand}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="text-right">
+                        <p className="font-medium text-sm">
+                          ${ownership.currentValue.toLocaleString()}
+                        </p>
+                        <p
+                          className={`text-xs ${ownership.unrealizedGain >= 0
+                              ? "text-success"
+                              : "text-destructive"
+                            }`}
+                        >
+                          {ownership.unrealizedGain >= 0 ? "+" : ""}$
+                          {ownership.unrealizedGain.toLocaleString()}
+                        </p>
+                      </div>
+                    </div>
+                  ))}
+                </div>
               </div>
             </GlassCard>
           </div>
@@ -386,35 +378,6 @@ export default function Page() {
                   </Link>
                 </Button>
               </div>
-            </GlassCard>
-
-            {/* Total Earnings */}
-            <GlassCard className="p-6 bg-linear-to-br from-success/10 to-accent/5">
-              <div className="flex items-center gap-3 mb-4">
-                <div className="p-2 rounded-lg bg-success/10">
-                  <TrendingUp className="h-5 w-5 text-success" />
-                </div>
-                <h3 className="font-semibold">Rental Earnings</h3>
-              </div>
-
-              <div className="space-y-3 mb-4">
-                <div>
-                  <p className="text-sm text-muted-foreground mb-1">
-                    Claimable Now
-                  </p>
-                  <p className="text-3xl font-bold text-success">
-                    ${stats.claimableYield}
-                  </p>
-                </div>
-                <div className="text-sm text-muted-foreground">
-                  <p>Lifetime earnings: ${stats.totalYieldEarned}</p>
-                </div>
-              </div>
-
-              <Button className="w-full bg-success hover:bg-success/90 gap-2">
-                <Sparkles className="h-4 w-4" />
-                Claim All Yield
-              </Button>
             </GlassCard>
 
             {/* Recent Activity */}

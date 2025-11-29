@@ -8,8 +8,8 @@ export interface Order {
   price: number;
   fee: number;
   status: "PENDING" | "CONFIRMED" | "CANCELLED";
-  signature?: string;
-  expiry?: number;
+  signatureData?: string;
+  expiryData?: number;
   nonce?: number;
 }
 
@@ -19,8 +19,13 @@ export interface OrderPayload {
   quantity: number;
   price: number;
   orderType: "BUY" | "SELL";
-  signature: string;
-  expiry: number;
+  signatureData: string;
+  expiryData: number;
   nonce: number;
+}
+
+export interface OrderMatch {
+  status: string;
+  match_data: Order;
 }
 
