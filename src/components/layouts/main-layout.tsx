@@ -18,7 +18,7 @@ interface MainLayoutProps {
   }[];
 }
 
-const ADMIN_ADDRESS = "0xE6E3bAF4E19E56E8339B2d7008eea70eC0ab1566";
+const ADMIN_ADDRESS = process.env.ADMIN_ADDRESS;
 
 export function MainLayout({ children, breadcrumbs }: MainLayoutProps) {
   const { address } = useAccount();
@@ -26,7 +26,7 @@ export function MainLayout({ children, breadcrumbs }: MainLayoutProps) {
   const pathname = usePathname();
 
   useEffect(() => {
-    if (address?.toLowerCase() === ADMIN_ADDRESS.toLowerCase()) {
+    if (address?.toLowerCase() === ADMIN_ADDRESS?.toLowerCase()) {
       // If admin is on a non-admin path, redirect to admin dashboard
       if (!pathname.startsWith("/admin")) {
         router.push("/admin/assets");

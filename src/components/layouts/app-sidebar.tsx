@@ -73,10 +73,10 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { address } = useAccount();
-  const ADMIN_ADDRESS = "0x81e677affc980bfdb2f89d2f2284c8ea902bdbf0";
+  const ADMIN_ADDRESS = process.env.ADMIN_ADDRESS;
 
   const filteredNavMain = data.navMain.filter((item) => {
-    const isAdmin = address?.toLowerCase() === ADMIN_ADDRESS.toLowerCase();
+    const isAdmin = address?.toLowerCase() === ADMIN_ADDRESS?.toLowerCase();
 
     if (isAdmin) {
       // Admin sees ONLY Admin Dashboard

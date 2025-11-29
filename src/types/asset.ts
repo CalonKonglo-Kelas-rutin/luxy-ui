@@ -3,7 +3,8 @@ export type ConditionRating = "Excellent" | "Good" | "Fair" | "Poor";
 export type VerificationStatus =
   | "PENDING"
   | "APPROVED"
-  | "REJECTED";
+  | "REJECTED"
+  | "TOKENIZED";
 
 // Asset Registration API Request
 export interface AssetRegistrationRequest {

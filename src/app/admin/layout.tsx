@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const ADMIN_ADDRESS = "0x81e677affc980bfdb2f89d2f2284c8ea902bdbf0";
+const ADMIN_ADDRESS = process.env.ADMIN_ADDRESS;
 
 export default function AdminLayout({
   children,
@@ -23,7 +23,7 @@ export default function AdminLayout({
 
     if (isConnected && address) {
       // Case-insensitive comparison
-      if (address.toLowerCase() === ADMIN_ADDRESS.toLowerCase()) {
+      if (address.toLowerCase() === ADMIN_ADDRESS?.toLowerCase()) {
         setIsAuthorized(true);
       } else {
         setIsAuthorized(false);

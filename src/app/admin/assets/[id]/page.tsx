@@ -28,10 +28,12 @@ import {
   Wallet,
   Coins,
   AlertCircle,
+  Vote,
 } from "lucide-react";
-import { useParams } from "next/navigation";
+import { useParams, useRouter } from "next/navigation";
 import { useEffect, useState, useCallback } from "react";
 import { assetService } from "@/services/assetService";
+import { governanceService } from "@/services/governanceService";
 import { Asset } from "@/types/asset";
 import Link from "next/link";
 import { toast } from "sonner";
@@ -44,6 +46,7 @@ import { Badge } from "@/components/ui/badge";
 
 export default function AdminAssetDetailPage() {
   const params = useParams();
+  const router = useRouter();
   const assetId = params.id as string;
   const [asset, setAsset] = useState<Asset | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -55,6 +58,11 @@ export default function AdminAssetDetailPage() {
   const [isApproveDialogOpen, setIsApproveDialogOpen] = useState(false);
   const [auditorNotes, setAuditorNotes] = useState("");
   const [appraisedValue, setAppraisedValue] = useState("");
+
+  // Vote dialog state
+  const [isVoteDialogOpen, setIsVoteDialogOpen] = useState(false);
+  const [salePrice, setSalePrice] = useState("");
+  const [saleDescription, setSaleDescription] = useState("");
 
   const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
@@ -207,6 +215,37 @@ export default function AdminAssetDetailPage() {
     } catch (error) {
       console.error("Failed to reject asset:", error);
       toast.error("Failed to reject asset");
+    } finally {
+      setIsProcessing(false);
+    }
+  };
+
+  const handleInitiateVote = async () => {
+    if (!asset) return;
+
+    if (!salePrice || isNaN(parseFloat(salePrice)) || parseFloat(salePrice) <= 0) {
+      toast.error("Please enter a valid sale price");
+      return;
+    }
+    if (!saleDescription.trim()) {
+      toast.error("Please enter a description");
+      return;
+    }
+
+    try {
+      setIsProcessing(true);
+      await governanceService.initiateProposal(
+        asset.id.toString(),
+        parseFloat(salePrice),
+        `Sale Proposal: ${asset.brand} ${asset.model}`,
+        saleDescription
+      );
+      toast.success("Sale proposal initiated successfully");
+      setIsVoteDialogOpen(false);
+      router.push("/governance");
+    } catch (error) {
+      console.error("Failed to initiate vote:", error);
+      toast.error("Failed to initiate vote");
     } finally {
       setIsProcessing(false);
     }
@@ -535,6 +574,52 @@ export default function AdminAssetDetailPage() {
                   </DialogContent>
                 </Dialog>
               </>
+            )}
+
+            {asset.status === "TOKENIZED" && (
+              <Dialog open={isVoteDialogOpen} onOpenChange={setIsVoteDialogOpen}>
+                <DialogTrigger asChild>
+                  <Button className="bg-primary text-primary-foreground">
+                    <Vote className="mr-2 h-4 w-4" />
+                    Initiate Sale Vote
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Initiate Asset Sale Vote</DialogTitle>
+                    <DialogDescription>
+                      Propose a sale of this asset to the token holders. This will trigger a voting process.
+                    </DialogDescription>
+                  </DialogHeader>
+                  <div className="space-y-4 py-4">
+                    <div>
+                      <Label htmlFor="sale-price" className="mb-2 block">Proposed Sale Price (USD)</Label>
+                      <Input
+                        id="sale-price"
+                        type="number"
+                        placeholder="e.g. 50000"
+                        value={salePrice}
+                        onChange={(e) => setSalePrice(e.target.value)}
+                      />
+                    </div>
+                    <div>
+                      <Label htmlFor="sale-desc" className="mb-2 block">Description / Reason</Label>
+                      <Textarea
+                        id="sale-desc"
+                        placeholder="Explain why this sale is beneficial..."
+                        value={saleDescription}
+                        onChange={(e) => setSaleDescription(e.target.value)}
+                      />
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button variant="outline" onClick={() => setIsVoteDialogOpen(false)}>Cancel</Button>
+                    <Button onClick={handleInitiateVote} disabled={isProcessing}>
+                      {isProcessing ? <Loader2 className="h-4 w-4 animate-spin" /> : "Create Proposal"}
+                    </Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
             )}
           </div>
         </div>
