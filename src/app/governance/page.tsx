@@ -29,18 +29,18 @@ export default function GovernancePage() {
     fetchProposals();
   }, []);
 
-  const getStatusColor = (status: string) => {
+  const getStatusBadge = (status: string) => {
     switch (status) {
       case "ACTIVE":
-        return "default"; // Primary color
+        return { variant: "default" as const, className: "" };
       case "PASSED":
-        return "success"; // Green
+        return { variant: "outline" as const, className: "bg-success/10 text-success border-success/20" };
       case "REJECTED":
-        return "destructive"; // Red
+        return { variant: "destructive" as const, className: "" };
       case "EXECUTED":
-        return "secondary"; // Gray/Blue
+        return { variant: "secondary" as const, className: "" };
       default:
-        return "outline";
+        return { variant: "outline" as const, className: "" };
     }
   };
 
@@ -90,59 +90,62 @@ export default function GovernancePage() {
             </div>
           ) : (
             <div className="space-y-4">
-              {proposals.map((proposal) => (
-                <GlassCard
-                  key={proposal.id}
-                  className="p-6 hover:border-primary/50 transition-all group"
-                >
-                  <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
-                    <div className="flex-1 space-y-2">
-                      <div className="flex items-center gap-3 mb-2">
-                        <Badge variant={getStatusColor(proposal.status) as any}>
-                          {proposal.status}
-                        </Badge>
-                        <span className="text-xs text-muted-foreground flex items-center gap-1">
-                          <Calendar className="h-3 w-3" />
-                          Ends {new Date(proposal.deadline).toLocaleDateString()}
-                        </span>
-                      </div>
-                      <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">
-                        {proposal.title}
-                      </h3>
-                      <p className="text-muted-foreground line-clamp-2">
-                        {proposal.description}
-                      </p>
+              {proposals.map((proposal) => {
+                const badgeProps = getStatusBadge(proposal.status);
+                return (
+                  <GlassCard
+                    key={proposal.id}
+                    className="p-6 hover:border-primary/50 transition-all group"
+                  >
+                    <div className="flex flex-col md:flex-row gap-6 items-start md:items-center justify-between">
+                      <div className="flex-1 space-y-2">
+                        <div className="flex items-center gap-3 mb-2">
+                          <Badge variant={badgeProps.variant} className={badgeProps.className}>
+                            {proposal.status}
+                          </Badge>
+                          <span className="text-xs text-muted-foreground flex items-center gap-1">
+                            <Calendar className="h-3 w-3" />
+                            Ends {new Date(proposal.deadline).toLocaleDateString()}
+                          </span>
+                        </div>
+                        <h3 className="text-xl font-semibold group-hover:text-primary transition-colors">
+                          {proposal.title}
+                        </h3>
+                        <p className="text-muted-foreground line-clamp-2">
+                          {proposal.description}
+                        </p>
 
-                      {/* Progress Bar */}
-                      <div className="max-w-md pt-2">
-                        <div className="flex justify-between text-xs mb-1">
-                          <span>Votes For: {proposal.votesFor}</span>
-                          <span>Required: {Math.ceil(proposal.totalEligibleTokens * 0.51)}</span>
+                        {/* Progress Bar */}
+                        <div className="max-w-md pt-2">
+                          <div className="flex justify-between text-xs mb-1">
+                            <span>Votes For: {proposal.votesFor}</span>
+                            <span>Required: {Math.ceil(proposal.totalEligibleTokens * 0.51)}</span>
+                          </div>
+                          <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
+                            <div
+                              className="h-full bg-success transition-all duration-500"
+                              style={{ width: `${(proposal.votesFor / proposal.totalEligibleTokens) * 100}%` }}
+                            />
+                          </div>
                         </div>
-                        <div className="h-2 w-full bg-muted rounded-full overflow-hidden">
-                          <div
-                            className="h-full bg-success transition-all duration-500"
-                            style={{ width: `${(proposal.votesFor / proposal.totalEligibleTokens) * 100}%` }}
-                          />
+                      </div>
+
+                      <div className="flex items-center gap-4">
+                        <div className="text-right hidden md:block">
+                          <p className="text-sm text-muted-foreground">Sale Value</p>
+                          <p className="text-lg font-bold">${proposal.currentValue.toLocaleString()}</p>
                         </div>
+                        <Button asChild>
+                          <Link href={`/governance/${proposal.id}`}>
+                            View Details
+                            <ChevronRight className="ml-2 h-4 w-4" />
+                          </Link>
+                        </Button>
                       </div>
                     </div>
-
-                    <div className="flex items-center gap-4">
-                      <div className="text-right hidden md:block">
-                        <p className="text-sm text-muted-foreground">Sale Value</p>
-                        <p className="text-lg font-bold">${proposal.currentValue.toLocaleString()}</p>
-                      </div>
-                      <Button asChild>
-                        <Link href={`/governance/${proposal.id}`}>
-                          View Details
-                          <ChevronRight className="ml-2 h-4 w-4" />
-                        </Link>
-                      </Button>
-                    </div>
-                  </div>
-                </GlassCard>
-              ))}
+                  </GlassCard>
+                );
+              })}
               {proposals.length === 0 && (
                 <div className="text-center py-12 text-muted-foreground">
                   No active proposals found.
