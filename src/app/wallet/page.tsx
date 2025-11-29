@@ -90,7 +90,10 @@ export default function WalletPage() {
                 Your liquidity has been transferred to your wallet
               </p>
             </div>
-            <StatusBadge status={loanData.status} className="text-base px-4 py-2" />
+            <Badge variant="outline" className="text-base px-4 py-2 bg-success/10 text-success border-success/20 gap-2">
+              <TrendingUp className="h-4 w-4" />
+              Active
+            </Badge>
           </div>
         </GlassCard>
 
@@ -232,7 +235,7 @@ export default function WalletPage() {
             {/* Transaction History */}
             <GlassCard className="p-6">
               <h3 className="text-xl font-semibold mb-4">Recent Transactions</h3>
-              
+
               <div className="space-y-3">
                 {transactionHistory.map((tx) => (
                   <div
