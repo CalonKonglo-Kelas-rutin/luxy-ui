@@ -258,27 +258,30 @@ export default function AdminAssetDetailPage() {
         },
       ]}
     >
-      <div className="max-w-6xl mx-auto space-y-6 py-6">
+      <div className="max-w-6xl mx-auto space-y-6 py-6 px-4 sm:px-6">
         {/* Header */}
-        <div className="flex flex-col sm:flex-row items-start justify-between gap-4">
-          <div className="flex items-start gap-4">
-            <Button asChild variant="ghost" size="icon" className="mt-1">
+        <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+          <div className="flex items-start gap-2 sm:gap-4 flex-1 min-w-0">
+            <Button asChild variant="ghost" size="icon" className="mt-1 shrink-0">
               <Link href="/admin/assets">
                 <ArrowLeft className="h-5 w-5" />
               </Link>
             </Button>
-            <div>
-              <h1 className="text-3xl font-bold">
+            <div className="min-w-0 flex-1">
+              <h1 className="text-2xl sm:text-3xl font-bold break-words">
                 {asset.brand} {asset.model}
               </h1>
-              <div className="flex items-center gap-2 mt-1 text-muted-foreground">
-                <span className="font-mono text-sm">
-                  Owner: {asset.ownerId}
+              <div className="flex items-start gap-2 mt-1">
+                <span className="text-xs sm:text-sm text-muted-foreground shrink-0">
+                  Owner:
+                </span>
+                <span className="font-mono text-xs sm:text-sm text-muted-foreground break-all">
+                  {asset.ownerId}
                 </span>
               </div>
             </div>
           </div>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-3 sm:shrink-0">
             <StatusBadge
               status={asset.status}
               className="text-base px-4 py-2"
@@ -536,7 +539,7 @@ export default function AdminAssetDetailPage() {
           </div>
         </div>
 
-        {!asset.approvedAt && !asset.rejectedAt && (
+        {!asset.approveAt && !asset.rejectedAt && (
           <Alert>
             <AlertCircle className="h-4 w-4 mr-2" />
             <AlertTitle>Verification Notice</AlertTitle>
@@ -584,12 +587,12 @@ export default function AdminAssetDetailPage() {
                   </p>
                 </div>
 
-                {asset.approvedAt && (
+                {asset.approveAt && (
                   <div className="relative pl-8">
                     <div className="absolute left-0 top-1 h-4 w-4 rounded-full border-2 border-success bg-success z-10" />
                     <p className="text-sm font-medium">Approved</p>
                     <p className="text-xs text-muted-foreground">
-                      {new Date(asset.approvedAt).toLocaleString()}
+                      {new Date(asset.approveAt).toLocaleString()}
                     </p>
                   </div>
                 )}
@@ -656,7 +659,7 @@ export default function AdminAssetDetailPage() {
                     <AlertDescription>{asset.auditorNotes}</AlertDescription>
                   </Alert>
                 )}
-                {asset.auditorNotes && asset.approvedAt && (
+                {asset.auditorNotes && asset.approveAt && (
                   <Alert variant="default" className="md:col-span-2">
                     <AlertTitle className="mb-1">Auditor Notes:</AlertTitle>
                     <AlertDescription>{asset.auditorNotes}</AlertDescription>

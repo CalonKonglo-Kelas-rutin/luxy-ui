@@ -113,7 +113,7 @@ export default function MyRequestDetailsPage() {
     },
     {
       status: "APPROVED",
-      timestamp: asset.approvedAt ? formatDate(asset.approvedAt) : "",
+      timestamp: asset.approveAt ? formatDate(asset.approveAt) : "",
       description: "Asset approved for tokenization",
       completedBy: "Verification Team",
     },
@@ -264,7 +264,7 @@ export default function MyRequestDetailsPage() {
                   <AlertDescription>{asset.auditorNotes}</AlertDescription>
                 </Alert>
               )}
-              {asset.auditorNotes && asset.approvedAt && (
+              {asset.auditorNotes && asset.approveAt && (
                 <Alert variant="default" className="md:col-span-2">
                   <AlertTitle className="mb-1">Auditor Notes:</AlertTitle>
                   <AlertDescription>{asset.auditorNotes}</AlertDescription>

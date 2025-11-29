@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layouts/main-layout";
 import { GlassCard } from "@/components/ui/glass-card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
-import { Shield, Clock, Sparkles, SearchIcon } from "lucide-react";
+import { Shield, Clock, Sparkles, SearchIcon, Loader2 } from "lucide-react";
 import Link from "next/link";
 import {
   InputGroup,
@@ -12,17 +12,21 @@ import {
   InputGroupInput,
 } from "@/components/ui/input-group";
 import { GlareCard } from "@/components/ui/glare-card";
-
-import { allTokenizedAsset } from "./data";
-
-const stats = {
-  totalOfferings: allTokenizedAsset.length,
-  totalValue: allTokenizedAsset.reduce((sum, offer) => sum + offer.totalValue, 0),
-  avgYield: 7.4,
-  activeInvestors: 155,
-};
+import { useTokenizeAsset } from "@/hooks/use-tokenize-asset";
+import { TokenizedAsset } from "@/types";
+import { useEffect, useState } from "react";
 
 export default function LaunchpadPage() {
+  const { getAllTokenizedAssets, isLoading } = useTokenizeAsset();
+  const [assets, setAssets] = useState<TokenizedAsset[]>([]);
+
+  useEffect(() => {
+    getAllTokenizedAssets().then((data) => {
+      setAssets(data);
+    });
+  }, [getAllTokenizedAssets]);
+
+  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
   return (
     <MainLayout
       breadcrumbs={[
@@ -64,108 +68,74 @@ export default function LaunchpadPage() {
         {/* All Offerings */}
         <div>
           <h2 className="text-2xl font-semibold mb-4">All Offerings</h2>
-          <div className="grid md:grid-cols-3 gap-4">
-            {allTokenizedAsset.map((offering) => (
-              <GlassCard
-                key={offering.id}
-                className="overflow-hidden group cursor-pointer hover:border-accent/50 transition-all"
-              >
-                {/* Compact Image */}
-                <div className="relative h-48 overflow-hidden">
-                  <GlareCard className="w-full h-full">
-                    <img
-                      alt={offering.brand}
-                      className="h-full w-full object-cover object-center"
-                      src="https://www.luxurybazaar.com/grey-market/wp-content/uploads/2024/11/Yellow-Gold-Rolex-GMT-Master-II-126718GRNR-1024x683.jpg"
-                    />
-                  </GlareCard>
-                  {offering.authenticityVerified && (
+          {isLoading ? (
+            <div className="flex flex-col items-center justify-center py-20">
+              <Loader2 className="h-10 w-10 animate-spin text-accent mb-4" />
+              <p className="text-muted-foreground">Loading assets...</p>
+            </div>
+          ) : (
+            <div className="grid md:grid-cols-3 gap-4">
+              {assets.map((asset) => (
+                <GlassCard
+                  key={asset.id}
+                  className="overflow-hidden group cursor-pointer hover:border-accent/50 transition-all"
+                >
+                  {/* Compact Image */}
+                  <div className="relative h-48 overflow-hidden">
+                    <GlareCard className="w-full h-full">
+                      <img
+                        alt={asset.brand}
+                        className="h-full w-full object-cover object-center"
+                        src={`${baseUrl}/${asset.imageUrls} || "https://placehold.co/800x600?text=No+Image"`}
+                      />
+                    </GlareCard>
                     <Badge className="absolute top-3 left-3 bg-success text-xs z-10">
                       <Shield className="h-3 w-3" />
                     </Badge>
-                  )}
-                  <Badge
-                    className="absolute top-3 right-3 text-xs z-10"
-                    variant={
-                      offering.status === "active"
-                        ? "default"
-                        : offering.status === "upcoming"
-                        ? "secondary"
-                        : "outline"
-                    }
-                  >
-                    {offering.status === "active"
-                      ? "Active"
-                      : offering.status === "upcoming"
-                      ? "Upcoming"
-                      : "Sold Out"}
-                  </Badge>
-                </div>
-
-                {/* Compact Content */}
-                <div className="p-4">
-                  <h3 className="font-semibold mb-1">{offering.brand}</h3>
-                  <p className="text-xs text-muted-foreground mb-3 line-clamp-1">
-                    {offering.model}
-                  </p>
-
-                  {/* Mini Progress */}
-                  <div className="mb-3">
-                    <div className="flex justify-between text-xs mb-1">
-                      <span className="text-muted-foreground">Progress</span>
-                      <span className="font-semibold text-accent">
-                        {offering.soldPercentage.toFixed(0)}%
-                      </span>
-                    </div>
-                    <div className="h-1.5 bg-muted rounded-full overflow-hidden">
-                      <div
-                        className="h-full bg-accent"
-                        style={{ width: `${offering.soldPercentage}%` }}
-                      />
-                    </div>
+                    <Badge
+                      className="absolute top-3 right-3 text-xs z-10"
+                      variant="default"
+                    >
+                      Active
+                    </Badge>
                   </div>
 
-                  {/* Compact Stats */}
-                  <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
-                    <div>
-                      <p className="text-muted-foreground mb-0.5">Price/Unit</p>
-                      <p className="font-semibold">${offering.pricePerUnit}</p>
-                    </div>
-                    <div>
-                      <p className="text-muted-foreground mb-0.5">APY</p>
-                      <p className="font-semibold text-success">
-                        {offering.rentalYieldApy}%
-                      </p>
-                    </div>
-                  </div>
+                  {/* Compact Content */}
+                  <div className="p-4">
+                    <h3 className="font-semibold mb-1">{asset.brand}</h3>
+                    <p className="text-xs text-muted-foreground mb-3 line-clamp-1">
+                      {asset.model}
+                    </p>
 
-                  {/* Compact CTA */}
-                  <Button
-                    size="sm"
-                    className="w-full"
-                    variant={
-                      offering.status === "active" ? "default" : "outline"
-                    }
-                    disabled={offering.status === "sold-out"}
-                    asChild
-                  >
-                    <Link href={`/launchpad/${offering.id}`}>
-                      {offering.status === "sold-out" ? (
-                        "Sold Out"
-                      ) : offering.status === "upcoming" ? (
-                        <>
-                          <Clock className="h-3 w-3 mr-1" />
-                          Coming Soon
-                        </>
-                      ) : (
-                        "View Details"
-                      )}
-                    </Link>
-                  </Button>
-                </div>
-              </GlassCard>
-            ))}
-          </div>
+                    {/* Compact Stats */}
+                    <div className="grid grid-cols-2 gap-2 mb-3 text-xs">
+                      <div>
+                        <p className="text-muted-foreground mb-0.5">Price/Unit</p>
+                        <p className="font-semibold">${asset.price}</p>
+                      </div>
+                      <div>
+                        <p className="text-muted-foreground mb-0.5">APY</p>
+                        <p className="font-semibold text-success">
+                          12.5%
+                        </p>
+                      </div>
+                    </div>
+
+                    {/* Compact CTA */}
+                    <Button
+                      size="sm"
+                      className="w-full"
+                      asChild
+                    >
+                      <Link href={`/launchpad/${asset.id}`}>
+                        View Details
+                      </Link>
+                    </Button>
+                  </div>
+                </GlassCard>
+              ))}
+            </div>
+          )}
         </div>
 
         {/* Info Banner */}

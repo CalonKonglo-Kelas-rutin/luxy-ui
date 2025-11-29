@@ -1,6 +1,6 @@
 // Fractional Watch Ownership Platform Types
 
-export type AssetType = 
+export type AssetType =
   | "luxury-watch"
   | "jewelry"
   | "collectibles"
@@ -8,7 +8,7 @@ export type AssetType =
 
 export type AssetCondition = "excellent" | "good" | "fair" | "poor";
 
-export type VerificationStatus = 
+export type VerificationStatus =
   | "draft"
   | "submitted"
   | "in-transit"
@@ -49,7 +49,7 @@ export interface Asset {
   createdAt: string;
   updatedAt: string;
   submittedAt?: string;
-  approvedAt?: string;
+  approveAt?: string;
   tokenId?: string;
 }
 

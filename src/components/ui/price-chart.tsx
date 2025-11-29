@@ -44,16 +44,14 @@ interface PriceChartProps {
 }
 
 export function PriceChart({ data, isLoading = false, error = null }: PriceChartProps) {
-  const [timeRange, setTimeRange] = React.useState("90d")
+  const [timeRange, setTimeRange] = React.useState("30d")
 
   const chartData = React.useMemo(() => {
     if (!data || !data.length) return { data: [], yMin: 0, yMax: 0 }
 
     const now = new Date()
     let daysToSubtract = 90
-    if (timeRange === "30d") {
-      daysToSubtract = 30
-    } else if (timeRange === "7d") {
+    if (timeRange === "7d") {
       daysToSubtract = 7
     }
 
@@ -93,12 +91,9 @@ export function PriceChart({ data, isLoading = false, error = null }: PriceChart
             className="w-[160px] rounded-lg sm:ml-auto"
             aria-label="Select a value"
           >
-            <SelectValue placeholder="Last 3 months" />
+            <SelectValue placeholder="Last 30 days" />
           </SelectTrigger>
           <SelectContent className="rounded-xl">
-            <SelectItem value="90d" className="rounded-lg">
-              Last 3 months
-            </SelectItem>
             <SelectItem value="30d" className="rounded-lg">
               Last 30 days
             </SelectItem>

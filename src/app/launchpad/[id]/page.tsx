@@ -17,13 +17,14 @@ import {
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useState, useEffect } from "react";
-import { toast } from "sonner";
 import { PriceChart } from "@/components/ui/price-chart";
 import { pricingService } from "@/services/pricingService";
 import { assetService } from "@/services/assetService";
 import { Pricing } from "@/types/pricing";
 import { Asset } from "@/types/asset";
 import { Skeleton } from "@/components/ui/skeleton";
+
+import { useOrder } from "@/hooks/use-order";
 
 export default function tokenizedAssetDetailPage() {
   const params = useParams();
@@ -33,10 +34,12 @@ export default function tokenizedAssetDetailPage() {
   const [asset, setAsset] = useState<Asset | null>(null);
   const [currentPrice, setCurrentPrice] = useState<Pricing | null>(null);
   const [quantity, setQuantity] = useState<number>(1);
-  const [isProcessing, setIsProcessing] = useState(false);
+  const [orderType, setOrderType] = useState<"BUY" | "SELL">("BUY");
   const [pricingData, setPricingData] = useState<Pricing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+
+  const { createOrder, isSubmitting } = useOrder();
 
   useEffect(() => {
     const fetchData = async () => {
@@ -116,7 +119,7 @@ export default function tokenizedAssetDetailPage() {
       <MainLayout>
         <div className="flex flex-col items-center justify-center min-h-[50vh]">
           <h1 className="text-2xl font-bold mb-4">{error || "Asset Not Found"}</h1>
-          <Button variant="ghost" onClick={() => router.push("/launchpad")}>
+          <Button onClick={() => router.push("/launchpad")}>
             Back to Launchpad
           </Button>
         </div>
@@ -127,19 +130,20 @@ export default function tokenizedAssetDetailPage() {
   const totalCost = quantity * tokenizedAsset.pricePerUnit;
   const maxQuantity = tokenizedAsset.availableUnits;
 
-  const handleBuy = async () => {
+  const handleOrder = async () => {
     if (quantity <= 0 || quantity > maxQuantity) return;
 
-    setIsProcessing(true);
-    // Mock transaction delay
-    await new Promise((resolve) => setTimeout(resolve, 2000));
-
-    toast.success(`Successfully purchased ${quantity} tokens!`, {
-      description: `You now own ${quantity} shares of ${tokenizedAsset.assetName}`,
-    });
-
-    setIsProcessing(false);
-    setQuantity(1);
+    try {
+      await createOrder(
+        tokenizedAsset.id,
+        quantity,
+        tokenizedAsset.pricePerUnit,
+        orderType
+      );
+      setQuantity(1);
+    } catch (error) {
+      // Error handled in hook
+    }
   };
 
   return (
@@ -270,27 +274,31 @@ export default function tokenizedAssetDetailPage() {
                   </div>
                 </div>
 
-                {/* Progress */}
-                <div className="space-y-2 mb-6">
-                  <div className="flex justify-between text-sm">
-                    <span className="text-muted-foreground">
-                      {tokenizedAsset.soldPercentage}% Funded
-                    </span>
-                    <span className="font-medium">
-                      {tokenizedAsset.soldUnits} / {tokenizedAsset.totalUnits} Sold
-                    </span>
-                  </div>
-                  <div className="h-2 bg-muted rounded-full overflow-hidden">
-                    <div
-                      className="h-full bg-accent transition-all duration-500"
-                      style={{ width: `${tokenizedAsset.soldPercentage}%` }}
-                    />
-                  </div>
-                </div>
-
                 {/* Purchase Form */}
                 {tokenizedAsset.status === "active" ? (
                   <div className="space-y-4">
+                    {/* Buy / Sell Toggle */}
+                    <div className="grid grid-cols-2 gap-2 p-1 bg-muted rounded-lg">
+                      <button
+                        onClick={() => setOrderType("BUY")}
+                        className={`py-2 text-sm font-medium rounded-md transition-all ${orderType === "BUY"
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                          }`}
+                      >
+                        Buy
+                      </button>
+                      <button
+                        onClick={() => setOrderType("SELL")}
+                        className={`py-2 text-sm font-medium rounded-md transition-all ${orderType === "SELL"
+                            ? "bg-background text-foreground shadow-sm"
+                            : "text-muted-foreground hover:text-foreground"
+                          }`}
+                      >
+                        Sell
+                      </button>
+                    </div>
+
                     <div className="space-y-2">
                       <label className="text-sm font-medium">Quantity</label>
                       <div className="flex items-center gap-3">
@@ -338,7 +346,9 @@ export default function tokenizedAssetDetailPage() {
 
                     <div className="p-4 rounded-lg bg-muted/50 space-y-2">
                       <div className="flex justify-between text-sm">
-                        <span className="text-muted-foreground">Total Cost</span>
+                        <span className="text-muted-foreground">
+                          {orderType === "BUY" ? "Total Cost" : "Total Value"}
+                        </span>
                         <span className="font-medium">
                           ${totalCost.toLocaleString()}
                         </span>
@@ -354,21 +364,24 @@ export default function tokenizedAssetDetailPage() {
                     </div>
 
                     <Button
-                      className="w-full h-12 text-lg"
-                      onClick={handleBuy}
-                      disabled={isProcessing}
+                      className={`w-full h-12 text-lg ${orderType === "SELL"
+                          ? "bg-destructive hover:bg-destructive/90"
+                          : ""
+                        }`}
+                      onClick={handleOrder}
+                      disabled={isSubmitting}
                     >
-                      {isProcessing ? (
+                      {isSubmitting ? (
                         <>Processing...</>
                       ) : (
                         <>
                           <Wallet className="mr-2 h-5 w-5" />
-                          Buy Tokens
+                          {orderType === "BUY" ? "Buy Tokens" : "Sell Tokens"}
                         </>
                       )}
                     </Button>
                     <p className="text-xs text-center text-muted-foreground">
-                      By purchasing, you agree to the Terms of Service.
+                      By {orderType === "BUY" ? "purchasing" : "selling"}, you agree to the Terms of Service.
                     </p>
                   </div>
                 ) : (

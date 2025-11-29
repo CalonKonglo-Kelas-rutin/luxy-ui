@@ -38,7 +38,7 @@ export interface Asset {
   createdAt: string;
   updatedAt: string;
   submittedAt?: string;
-  approvedAt?: string;
+  approveAt?: string;
   rejectedAt?: string;
   tokenId?: string | null;
   appraisedValue?: number;
