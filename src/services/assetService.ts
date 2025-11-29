@@ -72,9 +72,22 @@ export const assetService = {
     }
   },
 
-  approveAsset: async (assetId: string): Promise<Asset> => {
+  approveAsset: async (
+    assetId: string,
+    approvalData: {
+      documentsUrl?: string;
+      auditorNotes: string;
+      appraisedValueUsd: number;
+      ipfsMetadataUri?: string;
+      tokenId: string;
+      txHashMint: string;
+    }
+  ): Promise<Asset> => {
     try {
-      const response = await http.post(`/api/v1/rwa/assets/${assetId}/approve`);
+      const response = await http.put(
+        `/api/v1/rwa/admin/${assetId}/approve`,
+        approvalData
+      );
       return response.data;
     } catch (error) {
       if (error instanceof ApiError) {
@@ -84,9 +97,9 @@ export const assetService = {
     }
   },
 
-  rejectAsset: async (assetId: string, reason?: string): Promise<Asset> => {
+  rejectAsset: async (assetId: string, rejectionReason?: string): Promise<Asset> => {
     try {
-      const response = await http.post(`/api/v1/rwa/assets/${assetId}/reject`, { reason });
+      const response = await http.put(`/api/v1/rwa/admin/${assetId}/reject`, { rejectionReason });
       return response.data;
     } catch (error) {
       if (error instanceof ApiError) {

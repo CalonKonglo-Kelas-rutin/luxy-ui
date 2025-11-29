@@ -40,6 +40,7 @@ export interface Asset {
   updatedAt: string;
   submittedAt?: string;
   approvedAt?: string;
+  rejectedAt?: string;
   tokenId?: string | null;
   appraisedValue?: number;
   appraisedValueUsd?: number | null;
