@@ -23,7 +23,7 @@ export default function MarketplacePage() {
   useEffect(() => {
     getAllTokenizedAssets().then((data) => {
       // Filter for TOKENIZED assets (Secondary Market)
-      const tokenizedAssets = data.filter(asset => asset.status === 'APPROVED');
+      const tokenizedAssets = data.filter(asset => asset.status === 'TOKENIZED');
       setAssets(tokenizedAssets);
     });
   }, [getAllTokenizedAssets]);
