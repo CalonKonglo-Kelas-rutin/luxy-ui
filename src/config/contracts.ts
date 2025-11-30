@@ -1,7 +1,7 @@
 // Smart Contract Configuration for Lisk Sepolia
 export const CONTRACTS = {
   TOKENIZED_ASSET: {
-    address: '0xfd1650Df1c4e3ab4C01aA0F22548531B4bE33687' as `0x${string}`,
+    address: process.env.NEXT_PUBLIC_CONTRACT_ADDRESS as `0x${string}`,
     abi: [
       {
         inputs: [

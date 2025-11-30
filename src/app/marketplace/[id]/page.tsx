@@ -17,7 +17,7 @@ import {
 } from "lucide-react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { PriceChart } from "@/components/ui/price-chart";
 import { pricingService } from "@/services/pricingService";
 import { assetService } from "@/services/assetService";
@@ -26,11 +26,16 @@ import { Asset } from "@/types/asset";
 import { Skeleton } from "@/components/ui/skeleton";
 
 import { useOrder } from "@/hooks/use-order";
+import { useAccount } from "wagmi";
+import { orderService } from "@/services/orderService";
+import { UserOrderHistory } from "@/types/order";
+import { TransactionHistory } from "@/components/ui/transaction-history";
 
 export default function MarketplaceAssetDetailPage() {
   const params = useParams();
   const router = useRouter();
   const id = params?.id as string;
+  const { isConnected, address } = useAccount();
 
   const [asset, setAsset] = useState<Asset | null>(null);
   const [currentPrice, setCurrentPrice] = useState<Pricing | null>(null);
@@ -39,8 +44,25 @@ export default function MarketplaceAssetDetailPage() {
   const [pricingData, setPricingData] = useState<Pricing[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [userOrders, setUserOrders] = useState<UserOrderHistory['data']>([]);
 
   const { createOrder, isSubmitting } = useOrder();
+
+  const fetchUserOrders = useCallback(async () => {
+    if (!isConnected || !address || !id) return;
+    try {
+      const history = await orderService.getOrdersByUser(address, id);
+      if (history && history.data) {
+        setUserOrders(history.data);
+      }
+    } catch (err) {
+      console.error("Failed to fetch user orders", err);
+    }
+  }, [isConnected, address, id]);
+
+  useEffect(() => {
+    fetchUserOrders();
+  }, [fetchUserOrders]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -70,7 +92,7 @@ export default function MarketplaceAssetDetailPage() {
     fetchData();
   }, [id]);
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
 
   // Map Asset to UI model
   const tokenizedAsset = asset ? {
@@ -90,7 +112,7 @@ export default function MarketplaceAssetDetailPage() {
     investors: 0,
     status: asset.status === 'TOKENIZED' ? 'active' : 'upcoming', // In marketplace, active means tokenized
     authenticityVerified: true,
-    images: `${baseUrl}/${asset.imageUrls}`,
+    images: `${baseUrl}${asset.imageUrls}`,
     documents: asset.documentsUrl ? [{ title: "Verification Document", url: asset.documentsUrl }] : [],
   } : null;
 
@@ -142,6 +164,7 @@ export default function MarketplaceAssetDetailPage() {
         orderType
       );
       setQuantity(1);
+      fetchUserOrders();
     } catch (error) {
       // Error handled in hook
     }
@@ -433,12 +456,17 @@ export default function MarketplaceAssetDetailPage() {
           </div>
         </div>
 
+
+
+        {/* User Transaction History */}
+        <TransactionHistory userOrders={userOrders} isConnected={isConnected} />
+
         <PriceChart
           data={pricingData}
           isLoading={isLoading}
           error={error}
         />
       </div>
-    </MainLayout>
+    </MainLayout >
   );
 }

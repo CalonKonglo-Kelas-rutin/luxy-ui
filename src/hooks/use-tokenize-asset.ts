@@ -1,7 +1,7 @@
 'use client';
 
 import { useCallback, useState } from 'react';
-import { useWriteContract, useWaitForTransactionReceipt } from 'wagmi';
+import { useWriteContract, useWaitForTransactionReceipt, useAccount, useSwitchChain } from 'wagmi';
 import { CONTRACTS, LISK_SEPOLIA_CHAIN_ID } from '@/config/contracts';
 import { Asset, TokenizedAsset } from '@/types';
 import { toast } from 'sonner';
@@ -35,6 +35,9 @@ export function useTokenizeAsset() {
   const [tokenId, setTokenId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  const { chainId } = useAccount();
+  const { switchChainAsync } = useSwitchChain();
+
   const {
     data: hash,
     writeContract,
@@ -63,6 +66,16 @@ export function useTokenizeAsset() {
       // Validate required fields
       if (!asset.brand || !asset.model || !asset.serialNumber || !asset.ownerId) {
         throw new Error('Missing required asset information');
+      }
+
+      // Check and switch chain if necessary
+      if (chainId !== LISK_SEPOLIA_CHAIN_ID) {
+        try {
+          await switchChainAsync({ chainId: LISK_SEPOLIA_CHAIN_ID });
+        } catch (switchError) {
+          console.error('Failed to switch chain:', switchError);
+          throw new Error('Please switch to Lisk Sepolia network to continue');
+        }
       }
 
       // Generate token details

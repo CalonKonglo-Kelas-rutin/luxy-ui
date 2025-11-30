@@ -7,7 +7,7 @@ import { OrderPayload, Order, OrderMatch } from '@/types/order';
 import { toast } from 'sonner';
 
 // EIP-712 Domain
-const contractAddress = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0xfd1650Df1c4e3ab4C01aA0F22548531B4bE33687') as `0x${string}`;
+const contractAddress = (process.env.NEXT_PUBLIC_CONTRACT_ADDRESS || '0xd2aFd65AC0fCAa01a7E4e5CE0037c5ccF45A3bF4') as `0x${string}`;
 
 const domain = {
   name: 'ChainCredit Launchpad',
