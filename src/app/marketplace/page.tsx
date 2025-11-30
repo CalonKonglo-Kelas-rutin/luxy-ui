@@ -23,12 +23,12 @@ export default function MarketplacePage() {
   useEffect(() => {
     getAllTokenizedAssets().then((data) => {
       // Filter for TOKENIZED assets (Secondary Market)
-      const tokenizedAssets = data.filter(asset => asset.status === 'TOKENIZED');
+      const tokenizedAssets = data.filter(asset => asset.status === 'APPROVED');
       setAssets(tokenizedAssets);
     });
   }, [getAllTokenizedAssets]);
 
-  const baseUrl = process.env.NEXT_PUBLIC_API_BASE_URL;
+  const baseUrl = process.env.NEXT_PUBLIC_API_URL;
   return (
     <MainLayout
       breadcrumbs={[
@@ -86,7 +86,7 @@ export default function MarketplacePage() {
                       <img
                         alt={asset.brand}
                         className="h-full w-full object-cover object-center"
-                        src={asset.imageUrls ? `${baseUrl}/${asset.imageUrls}` : "https://placehold.co/800x600?text=No+Image"}
+                        src={asset.imageUrls ? `${baseUrl}${asset.imageUrls}` : "https://placehold.co/800x600?text=No+Image"}
                       />
                     </GlareCard>
                     <Badge className="absolute top-3 left-3 bg-success text-xs z-10">

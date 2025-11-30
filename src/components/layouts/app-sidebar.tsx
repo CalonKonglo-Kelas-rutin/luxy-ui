@@ -73,7 +73,7 @@ const data = {
 
 export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   const { address } = useAccount();
-  const ADMIN_ADDRESS = process.env.ADMIN_ADDRESS;
+  const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_ADDRESS;
 
   const filteredNavMain = data.navMain.filter((item) => {
     const isAdmin = address?.toLowerCase() === ADMIN_ADDRESS?.toLowerCase();

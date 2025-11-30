@@ -29,3 +29,20 @@ export interface OrderMatch {
   match_data: Order;
 }
 
+export interface UserOrderHistory {
+  data: Array<{
+    createdAt: string;
+    orderId: number;
+    orderType: "BUY" | "SELL";
+    price: number;
+    quantity: number;
+    queuePosition: number;
+    status: "OPEN" | "MATCHED" | "CANCELLED";
+    userAddress: string;
+  }>;
+  meta: {
+    assetId: string;
+    totalQueue: number;
+  },
+  status: string;
+}

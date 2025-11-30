@@ -6,7 +6,7 @@ import { useEffect, useState } from "react";
 import { Loader2, ShieldAlert } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const ADMIN_ADDRESS = process.env.ADMIN_ADDRESS;
+const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_ADDRESS;
 
 export default function AdminLayout({
   children,

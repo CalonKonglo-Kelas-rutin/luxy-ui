@@ -18,7 +18,7 @@ interface MainLayoutProps {
   }[];
 }
 
-const ADMIN_ADDRESS = process.env.ADMIN_ADDRESS;
+const ADMIN_ADDRESS = process.env.NEXT_PUBLIC_ADMIN_ADDRESS;
 
 export function MainLayout({ children, breadcrumbs }: MainLayoutProps) {
   const { address } = useAccount();
